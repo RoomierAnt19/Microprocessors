@@ -12,9 +12,9 @@ entity register_file is
            dsel : in STD_LOGIC_VECTOR (Nsel-1 downto 0);
            din : in STD_LOGIC_VECTOR (Bits-1 downto 0);
            asel : in STD_LOGIC_VECTOR (Nsel-1 downto 0);
---           bsel : in STD_LOGIC_VECTOR (Nsel-1 downto 0);
-           a : out STD_LOGIC_vector(Bits-1 downto 0)
---           b : out STD_LOGIC_vector(Bits-1 downto 0)
+           bsel : in STD_LOGIC_VECTOR (Nsel-1 downto 0);
+           a : out STD_LOGIC_vector(Bits-1 downto 0);
+           b : out STD_LOGIC_vector(Bits-1 downto 0)
         );
 end register_file;
 
@@ -29,19 +29,20 @@ begin
 
 decoded <= decode(dsel, den);
 
-regs: for i in 0 to 2**Nsel-1 generate
+regs: for i in 0 to (2**Nsel-1) - 1 generate
     begin
         regsi: entity work.gen_reg (behavioral)
         generic map(N => Bits)
         port map(clk => clk,
                 reset => reset,
-                enable => decoded(i),
+                enable => decoded(i+1),
                 d => din,
-                q => array_reg(i));
+                q => array_reg(i+1));
         end generate;
-        
+      
+array_reg(0) <= (others => '0');
 a <= array_reg(to_integer(unsigned(asel)));
---b <= array_reg(to_integer(unsigned(bsel)));
+b <= array_reg(to_integer(unsigned(bsel)));
 
 
 end Behavioral;
