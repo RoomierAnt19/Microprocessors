@@ -1,4 +1,5 @@
 *.json
 *.cf
+*.pdf
 Makefile
 wave/

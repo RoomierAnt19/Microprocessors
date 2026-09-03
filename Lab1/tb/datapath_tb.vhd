@@ -3,10 +3,10 @@ use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
 use work.my_package.all;
 
-entity datapath_testbench is
-end datapath_testbench;
+entity datapath_tb is
+end datapath_tb;
 
-architecture arch of datapath_testbench is
+architecture arch of datapath_tb is
   signal  imm    : std_logic_vector(15 downto 0):="0000000010101010";
   signal  asel   : std_logic_vector(2 downto 0):="000";
   signal  bsel   : std_logic_vector(2 downto 0):="000";

@@ -29,15 +29,15 @@ begin
 
 decoded <= decode(dsel, den);
 
-regs: for i in 0 to (2**Nsel-1) - 1 generate
+regs: for i in 1 to 2**Nsel-1 generate
     begin
         regsi: entity work.gen_reg (behavioral)
         generic map(N => Bits)
         port map(clk => clk,
                 reset => reset,
-                enable => decoded(i+1),
+                enable => decoded(i),
                 d => din,
-                q => array_reg(i+1));
+                q => array_reg(i));
         end generate;
       
 array_reg(0) <= (others => '0');
