@@ -15,7 +15,7 @@ entity Adder_Subtractor is
            );
 end Adder_Subtractor;
 
-architecture adder_Nbit of Adder_Subtractor is
+architecture behavioral of Adder_Subtractor is
     signal sub: unsigned (N downto 0);
     signal topbits: unsigned (2 downto 0);
     signal subtract, modB: std_logic_vector (N-1 downto 0);
@@ -31,4 +31,4 @@ begin
     carry_out <= topbits(2);
     r <= std_logic_vector(topbits(1) & sub(N-1 downto 1));
     
-end adder_Nbit;
+end behavioral;

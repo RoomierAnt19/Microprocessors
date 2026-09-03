@@ -28,10 +28,10 @@ stage(0) <= din;
 Shift: for I in N downto 1 generate
     sI: stage(I) <= 
         --No shift
-        stage(I-1) when shamt(I-1) = '0' or func="00" else
+        stage(I-1) when shamt(I-1) = '0' else
     
         --Shift left
-        stage(I-1)(2**N-2**(I-1)-1 downto 0) & zero(2**(I-1)-1 downto 0) when func="01" else
+        stage(I-1)(2**N-2**(I-1)-1 downto 0) & zero(2**(I-1)-1 downto 0) when func?="-0" else
         
         --Shift arithmetic right
         one(2**(I-1)-1 downto 0) & stage(I-1)(2**N-1 downto 2**(I-1)) when func="11" and stage(I-1)((2**N)-1 downto (2**N)-1) = "1" else
