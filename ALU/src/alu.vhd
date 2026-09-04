@@ -67,12 +67,13 @@ begin
   cout <= (XLEN-1 downto 1 => '0') & slt when func(0) = '0' else 
           (XLEN-1 downto 1 => '0') & ult;
 
-  D <= adout when which ?= "000" else 
-       shout when which ?= "-01" else
-       cout when which ?= "01-" else
-       xorout when which ?= "100" else
-       orout when which ?= "110" else
-       andout;
+  with which select?
+    D <= adout when "000",
+          shout when "-01",
+          cout when "01-",
+          xorout when "100",
+          orout when "110",
+          andout when others;
 
 end architecture Behavioral;
 
