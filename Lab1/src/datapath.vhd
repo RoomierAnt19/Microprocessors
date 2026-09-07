@@ -8,7 +8,7 @@ use work.my_package.all;
 entity data_path is 
   Port (
     input: in control_word;
-    clk: in std_logic
+    clk: in std_logic;
        );
 end data_path;
 
@@ -16,8 +16,10 @@ architecture arch of data_path is
 
 begin
   reg_file : entity work.register_file(behavioral)
-    generic map (Nsel : )
+    generic map (Nsel => 5)
     Port map (
+        clk => clk,
+
 
              )
 

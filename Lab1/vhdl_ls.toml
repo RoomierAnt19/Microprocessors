@@ -1,0 +1,7 @@
+[libraries]
+defaultlib.files = [
+  '**/*.vhd',
+  '../ALU/src/*.vhd',
+  '../branch_test/src/*.vhd',
+  '../reg_file/src/*.vhd'
+]
