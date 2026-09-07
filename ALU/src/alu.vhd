@@ -74,6 +74,5 @@ begin
           xorout when "100",
           orout when "110",
           andout when others;
-
 end architecture Behavioral;
 
