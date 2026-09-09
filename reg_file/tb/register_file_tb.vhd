@@ -15,10 +15,10 @@ architecture Behavioral of register_file_tb is
       den   : in  std_logic;
       dsel  : in  std_logic_vector(1 downto 0);
       asel  : in  std_logic_vector(1 downto 0);
---    bsel  : in  std_logic_vector(1 downto 0);
+      bsel  : in  std_logic_vector(1 downto 0);
       din   : in  std_logic_vector(7 downto 0);
-      a     : out std_logic_vector(7 downto 0)
---    b     : out std_logic_vector(7 downto 0)
+      a     : out std_logic_vector(7 downto 0);
+      b     : out std_logic_vector(7 downto 0)
     );
   end component;
 
@@ -29,11 +29,11 @@ architecture Behavioral of register_file_tb is
   signal dsel  : std_logic_vector(1 downto 0) := (others => '0');
   signal asel  : std_logic_vector(1 downto 0) := (others => '0');
   signal din   : std_logic_vector(7 downto 0) := (others => '0');
---signal bsel  : std_logic_vector(1 downto 0) := (others => '0');
+  signal bsel  : std_logic_vector(1 downto 0) := (others => '0');
 
   -- Outputs left uninitialized (driven strictly by UUT)
   signal a     : std_logic_vector(7 downto 0);
---signal b     : std_logic_vector(7 downto 0);
+  signal b     : std_logic_vector(7 downto 0);
 
   constant clk_period : time := 20 ns;
   signal sim_finished : boolean := false;
@@ -46,10 +46,10 @@ begin
     den   => den,
     dsel  => dsel,
     asel  => asel,
---  bsel  => bsel,
+    bsel  => bsel,
     din   => din,
-    a     => a
---  b     => b
+    a     => a,
+    b     => b
   );
 
   -- Clock process with termination condition

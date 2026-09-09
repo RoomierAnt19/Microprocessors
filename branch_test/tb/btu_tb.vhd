@@ -20,14 +20,19 @@
 --   end entity branch_test_unit;
 --
 -- The testbench instantiates that entity three times and runs three
--- phases against a reference model written directly from the condition
--- table.  That model is independent of the BTU: it is written with the
--- numeric_std operators and shares no logic with any implementation.
--- It lives in the separate package btu_reference, which supplies
+-- phases.  No reference model ships with it.
 --
---   function btu_model(a, b : std_logic_vector;
---                      c    : std_logic_vector(2 downto 0);
---                      en   : std_logic) return std_logic;
+-- Phase 1 carries its 4,096 expected results outright, packed four to a
+-- hex character, so a 4-bit failure is reported with the operands that
+-- caused it.  Phases 2 and 3 are checked with a rolling checksum over
+-- the unit's own outputs, one checksum per cond code, so a failure
+-- there names the instruction but not the operands.  Four bits is where
+-- a comparison bug is debuggable by hand anyway, and phase 1 is
+-- exhaustive at that width.
+--
+-- Regenerate the constants with tools/gen_btu_answers.py after any
+-- change to the stimulus.  Each phase asserts its own vector count, so
+-- drift between the two fails loudly rather than silently.
 --
 --   Phase 1   XLEN = 4    exhaustive, all 16 x 16 operand pairs against
 --                         all 8 condition codes and both values of
@@ -65,20 +70,20 @@
 -- on Implementation in the PDF.
 --
 -- To run under GHDL:
---   ghdl -a --std=08 -frelaxed project_types.vhdl btu_reference.vhdl \
+--   ghdl -a --std=08 -frelaxed project_types.vhdl \
 --        branch_test_unit.vhdl BTU_testbench.vhdl
---   ghdl -e --std=08 tb_btu
---   ghdl -r --std=08 tb_btu
+--   ghdl -e --std=08 BTU_testbench
+--   ghdl -r --std=08 BTU_testbench
 --
 -- To run under Vivado's simulator:
---   xvhdl -2008 project_types.vhdl btu_reference.vhdl \
+--   xvhdl -2008 project_types.vhdl \
 --         branch_test_unit.vhdl BTU_testbench.vhdl
---   xelab tb_btu -s sim_btu
---   xsim sim_btu -R
+--   xelab BTU_testbench -s sim_BTU_testbench
+--   xsim sim_BTU_testbench -R
 --
 -- project_types is needed only because branch_test_unit uses
 -- To_Std_Logic from it.  The testbench itself depends on nothing but
--- the IEEE libraries and btu_reference.
+-- the IEEE libraries.
 --
 -- Measured on Vivado 2025.1 and GHDL 4.1.0, all three phases: 3 s under
 -- either simulator.  A run that takes minutes or stalls partway through
@@ -105,16 +110,12 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
-use ieee.math_real.all;
+use std.textio.all;
 
--- The reference model lives in its own file, btu_reference.vhdl, and is
--- not part of the lab distribution.  Analyze it before this file.
-use work.btu_reference.all;
+entity BTU_testbench is
+end entity BTU_testbench;
 
-entity btu_tb is
-end entity btu_tb;
-
-architecture sim of btu_tb is
+architecture sim of BTU_testbench is
 
   -- Stop printing individual mismatches after this many, per phase.  A
   -- broken BTU can fail a million times, and the first few tell you
@@ -137,13 +138,21 @@ architecture sim of btu_tb is
   -- skips.
   constant STRIDE8 : positive := 1;
 
-  -- Print a progress line every this many values of RS1 in phase 2, so
-  -- that a stalled run can be told from a slow one.
-  constant PROGRESS8 : positive := 32;
-
   ---------------------------------------------------------------------------
   -- Helpers
   ---------------------------------------------------------------------------
+
+  -- Progress and summary go through textio rather than through report.
+  -- xsim follows every report with a line naming the time, the process
+  -- and the source file, which triples the length of the transcript for
+  -- lines that are not diagnosing anything.  Mismatches stay on report,
+  -- where that context is worth having.
+  procedure print(s : string) is
+    variable l : line;
+  begin
+    write(l, s);
+    writeline(output, l);
+  end procedure print;
 
   function is_01(v : std_logic_vector) return boolean is
     variable ok : boolean := true;
@@ -229,6 +238,93 @@ architecture sim of btu_tb is
   end function mnemonic;
 
   ---------------------------------------------------------------------------
+  -- Expected results
+  --
+  -- No reference model ships with this testbench.  Phase 1 carries its
+  -- 4,096 answers outright, four to a hex character, in generation
+  -- order, so a 4-bit failure is reported with the operands that caused
+  -- it.  Phases 2 and 3 are checked by a rolling checksum over the
+  -- unit's own outputs, one per cond code, so a failure there names the
+  -- instruction even though it cannot name the operands.
+  --
+  -- Regenerate all of it with tools/gen_btu_answers.py after any change
+  -- to the stimulus.  The per-phase vector counts asserted below are the
+  -- guard against forgetting.
+  ---------------------------------------------------------------------------
+  -- Plain integers, not unsigned vectors.  GHDL implements a vector
+  -- operation as a loop over the elements with a temporary per call, so
+  -- an unsigned hash costs about twenty times what this does across a
+  -- million vectors.
+  type hash_array is array (natural range <>) of natural;
+  constant HASH_M    : natural := 67108859;   -- prime; 31*HASH_M+1 still fits
+  constant HASH_INIT : natural := 1;
+
+  constant PHASE1_ANSWERS : string(1 to 1024) :=
+    "0000000000000000000000000000000000000000000000000000000000000000" &
+    "0000000000000000000000000000000000000000000000000000000000000000" &
+    "0000000000000000000000000000000000000000000000000000000000000000" &
+    "0000000000000000000000000000000000000000000000000000000000000000" &
+    "0000000000000000000000000000000000000000000000000000000000000000" &
+    "0000000000000000000000000000000000000000000000000000000000000000" &
+    "0000000000000000000000000000000000000000000000000000000000000000" &
+    "0000000000000000000000000000000000000000000000000000000000000000" &
+    "8000400020001000080004000200010000800040002000100008000400020001" &
+    "7FFFBFFFDFFFEFFFF7FFFBFFFDFFFEFFFF7FFFBFFFDFFFEFFFF7FFFBFFFDFFFE" &
+    "0000000000000000000000000000000000000000000000000000000000000000" &
+    "0000000000000000000000000000000000000000000000000000000000000000" &
+    "7F003F001F000F000700030001000000FF7FFF3FFF1FFF0FFF07FF03FF01FF00" &
+    "80FFC0FFE0FFF0FFF8FFFCFFFEFFFFFF008000C000E000F000F800FC00FE00FF" &
+    "7FFF3FFF1FFF0FFF07FF03FF01FF00FF007F003F001F000F0007000300010000" &
+    "8000C000E000F000F800FC00FE00FF00FF80FFC0FFE0FFF0FFF8FFFCFFFEFFFF";
+
+  constant PHASE2_SUMS : hash_array(0 to 7) := (
+    0 => 59084059,   -- BEQ  131072 vectors
+    1 => 60083582,   -- BNE  131072 vectors
+    2 => 58150010,   -- ---  131072 vectors
+    3 => 58150010,   -- ---  131072 vectors
+    4 => 57583127,   -- BLT  131072 vectors
+    5 => 61584514,   -- BGE  131072 vectors
+    6 => 55697920,   -- BLTU 131072 vectors
+    7 => 63469721);  -- BGEU 131072 vectors
+
+  constant PHASE3_SUMS : hash_array(0 to 7) := (
+    0 => 21667586,   -- BEQ  7872 vectors
+    1 => 55056324,   -- BNE  7872 vectors
+    2 => 45768179,   -- ---  7872 vectors
+    3 => 45768179,   -- ---  7872 vectors
+    4 => 23296307,   -- BLT  7872 vectors
+    5 => 53243023,   -- BGE  7872 vectors
+    6 => 7131727,   -- BLTU 7872 vectors
+    7 => 22693489);  -- BGEU 7872 vectors
+  function roll(h : natural; v : std_logic) return natural is
+    variable b : natural := 0;
+  begin
+    if v = '1' then b := 1; end if;
+    return (h * 31 + b) mod HASH_M;
+  end function roll;
+
+  function answer_bit(idx : natural) return std_logic is
+    constant DIGITS : string(1 to 16) := "0123456789ABCDEF";
+    variable ch  : character;
+    variable nib : natural := 0;
+  begin
+    ch := PHASE1_ANSWERS((idx / 4) + 1);
+    for k in 1 to 16 loop
+      if DIGITS(k) = ch then nib := k - 1; end if;
+    end loop;
+    if ((nib / (2 ** (3 - (idx mod 4)))) mod 2) = 1 then
+      return '1';
+    else
+      return '0';
+    end if;
+  end function answer_bit;
+
+ -- BGEU 7872 vectors
+
+
+
+
+  ---------------------------------------------------------------------------
   -- Corner operands for the 32-bit phase.  These are the values that
   -- separate a correct signed comparison from one built on the sign bit
   -- of a 32-bit difference, and a correct unsigned comparison from a
@@ -287,66 +383,103 @@ begin
     variable phase_count  : natural := 0;
     variable reports      : natural := 0;
 
-    variable seed1 : positive := 12345;
-    variable seed2 : positive := 6789;
-    variable rand  : real;
+    -- Deterministic pseudo-random source.  xorshift32 rather than
+    -- ieee.math_real.UNIFORM, because the phase 2 and 3 checksums are
+    -- constants and every simulator has to walk the identical sequence
+    -- to reproduce them.  tools/gen_btu_answers.py carries the same
+    -- three lines.
+    variable rng : unsigned(31 downto 0) := x"12345678";
+
+    -- One running checksum per cond code, so a phase 2 or 3 failure
+    -- names the instruction.
+    variable hsum  : hash_array(0 to 7) := (others => HASH_INIT);
+    variable p1idx : natural := 0;
 
     procedure start_phase(name : string) is
     begin
       phase_errors := 0;
       phase_count  := 0;
       reports      := 0;
-      report "=== " & name & " ===" severity note;
+      hsum         := (others => HASH_INIT);
+      print("=== " & name & " ===");
     end procedure start_phase;
 
-    procedure end_phase(name : string) is
+    procedure end_phase(name : string; expect_count : natural) is
     begin
       total_errors := total_errors + phase_errors;
-      report name & ": " & integer'image(phase_count) & " vectors, " &
-             integer'image(phase_errors) & " errors" severity note;
+      print(name & ": " & integer'image(phase_count) & " vectors, " &
+            integer'image(phase_errors) & " errors");
+      assert phase_count = expect_count
+        report name & " ran " & integer'image(phase_count) & " vectors, but " &
+               "the stored answers were generated for " &
+               integer'image(expect_count) & ".  The stimulus and " &
+               "tools/gen_btu_answers.py have diverged; regenerate."
+        severity failure;
     end procedure end_phase;
 
-    -- Compare one result against the model.  Call this after the inputs
-    -- have been applied and time has advanced.
-    procedure check(a, b : std_logic_vector;
-                    c    : std_logic_vector(2 downto 0);
-                    en   : std_logic;
-                    got  : std_logic;
-                    name : string) is
+    -- Phase 1 only.  The answers are carried outright, so a mismatch is
+    -- reported with the operands that caused it.
+    procedure check_p1(a, b : std_logic_vector;
+                       c    : std_logic_vector(2 downto 0);
+                       en   : std_logic;
+                       got  : std_logic) is
       variable expected : std_logic;
     begin
-      expected    := btu_model(a, b, c, en);
+      expected    := answer_bit(p1idx);
+      p1idx       := p1idx + 1;
       phase_count := phase_count + 1;
       if got /= expected then
         phase_errors := phase_errors + 1;
         if reports < MAX_REPORTS then
           reports := reports + 1;
-          report name & " MISMATCH " & mnemonic(c, en) &
+          report "XLEN=4 MISMATCH " & mnemonic(c, en) &
                  " enable=" & to_char(en) & " cond=" & to_bin(c) &
                  " RS1=" & to_hex(a) & " RS2=" & to_hex(b) &
-                 " expected=" & to_char(expected) &
-                 " got=" & to_char(got) severity warning;
-          if reports = MAX_REPORTS then
-            report name & ": further mismatches will not be printed"
-              severity warning;
-          end if;
+                 " expected=" & to_char(expected) & " got=" & to_char(got)
+            severity warning;
         end if;
       end if;
-    end procedure check;
+    end procedure check_p1;
 
-    -- One uniformly distributed bit per position.
-    procedure random_slv(result : out std_logic_vector) is
-      variable value : std_logic_vector(result'range);
+    -- Phases 2 and 3.  Folded into the checksum for this cond code.
+    procedure absorb(ci : natural; got : std_logic) is
     begin
-      for i in value'range loop
-        uniform(seed1, seed2, rand);
-        if rand < 0.5 then
-          value(i) := '0';
-        else
-          value(i) := '1';
+      -- A checksum folds 'U' or 'X' in as if it were 0, so metavalues
+      -- have to be caught here rather than left to the comparison.
+      if got /= '0' and got /= '1' then
+        phase_errors := phase_errors + 1;
+        if reports < MAX_REPORTS then
+          reports := reports + 1;
+          report "take_branch is '" & to_char(got) & "', not 0 or 1, on cond=" &
+                 to_bin(std_logic_vector(to_unsigned(ci, 3))) severity warning;
+        end if;
+      end if;
+      hsum(ci)    := roll(hsum(ci), got);
+      phase_count := phase_count + 1;
+    end procedure absorb;
+
+    procedure verify_sums(expect : hash_array; name : string) is
+    begin
+      for ci in 0 to 7 loop
+        if hsum(ci) /= expect(ci) then
+          phase_errors := phase_errors + 1;
+          report name & " CHECKSUM MISMATCH for cond=" &
+                 to_bin(std_logic_vector(to_unsigned(ci, 3))) & " " &
+                 mnemonic(std_logic_vector(to_unsigned(ci, 3)), '1') &
+                 ": expected " & integer'image(expect(ci)) &
+                 ", got " & integer'image(hsum(ci)) &
+                 ".  Phase 1 reports this class of bug with operands."
+            severity warning;
         end if;
       end loop;
-      result := value;
+    end procedure verify_sums;
+
+    procedure random_slv(result : out std_logic_vector) is
+    begin
+      rng := rng xor shift_left(rng, 13);
+      rng := rng xor shift_right(rng, 17);
+      rng := rng xor shift_left(rng, 5);
+      result := std_logic_vector(resize(rng, result'length));
     end procedure random_slv;
 
     variable rand32 : std_logic_vector(31 downto 0);
@@ -366,12 +499,12 @@ begin
           for j in 0 to 15 loop
             b4 <= std_logic_vector(to_unsigned(j, 4));
             wait for 1 ns;
-            check(a4, b4, cond, enable, take_branch4, "XLEN=4");
+            check_p1(a4, b4, cond, enable, take_branch4);
           end loop;
         end loop;
       end loop;
     end loop;
-    end_phase("Phase 1: XLEN=4, exhaustive");
+    end_phase("Phase 1: XLEN=4, exhaustive", 4096);
 
     -------------------------------------------------------------------------
     -- Phase 2: XLEN = 8, exhaustive
@@ -382,25 +515,20 @@ begin
       for c in 0 to 7 loop
         cond <= std_logic_vector(to_unsigned(c, 3));
         wait for 1 ns;
-        report "  XLEN=8: enable=" & to_char(enable) &
-               " cond=" & to_bin(cond) & " " & mnemonic(cond, enable)
-          severity note;
+        print("  enable=" & to_char(enable) & " cond=" & to_bin(cond) &
+              " " & mnemonic(cond, enable));
         for i in 0 to (256 / STRIDE8) - 1 loop
-          if (i mod PROGRESS8) = 0 then
-            report "    RS1=" & to_hex(std_logic_vector(to_unsigned(i * STRIDE8, 8))) &
-                   " vectors=" & integer'image(phase_count) &
-                   " at " & time'image(now) severity note;
-          end if;
           a8 <= std_logic_vector(to_unsigned(i * STRIDE8, 8));
           for j in 0 to (256 / STRIDE8) - 1 loop
             b8 <= std_logic_vector(to_unsigned(j * STRIDE8, 8));
             wait for 1 ns;
-            check(a8, b8, cond, enable, take_branch8, "XLEN=8");
+            absorb(c, take_branch8);
           end loop;
         end loop;
       end loop;
     end loop;
-    end_phase("Phase 2: XLEN=8, exhaustive");
+    verify_sums(PHASE2_SUMS, "Phase 2");
+    end_phase("Phase 2: XLEN=8, exhaustive", 1048576);
 
     -------------------------------------------------------------------------
     -- Phase 3: XLEN = 32, corner cases, random, and equal pairs
@@ -419,7 +547,7 @@ begin
           for j in CORNERS'range loop
             b32 <= CORNERS(j);
             wait for 1 ns;
-            check(a32, b32, cond, enable, take_branch32, "XLEN=32 corner");
+            absorb(c, take_branch32);
           end loop;
         end loop;
       end loop;
@@ -436,7 +564,7 @@ begin
           random_slv(rand32);
           b32 <= rand32;
           wait for 1 ns;
-          check(a32, b32, cond, enable, take_branch32, "XLEN=32 random");
+          absorb(c, take_branch32);
         end loop;
       end loop;
     end loop;
@@ -453,7 +581,7 @@ begin
           a32 <= rand32;
           b32 <= rand32;
           wait for 1 ns;
-          check(a32, b32, cond, enable, take_branch32, "XLEN=32 equal");
+          absorb(c, take_branch32);
         end loop;
       end loop;
     end loop;
@@ -470,24 +598,25 @@ begin
             a32 <= CORNERS(i);
             b32 <= rand32;
             wait for 1 ns;
-            check(a32, b32, cond, enable, take_branch32, "XLEN=32 mixed");
+            absorb(c, take_branch32);
             a32 <= rand32;
             b32 <= CORNERS(i);
             wait for 1 ns;
-            check(a32, b32, cond, enable, take_branch32, "XLEN=32 mixed");
+            absorb(c, take_branch32);
           end loop;
         end loop;
       end loop;
     end loop;
 
-    end_phase("Phase 3: XLEN=32, corner and random");
+    verify_sums(PHASE3_SUMS, "Phase 3");
+    end_phase("Phase 3: XLEN=32, corner and random", 62976);
 
     -------------------------------------------------------------------------
     -- Summary
     -------------------------------------------------------------------------
-    report "=== Summary ===" severity note;
+    print("=== Summary ===");
     if total_errors = 0 then
-      report "ALL TESTS PASSED" severity note;
+      print("ALL TESTS PASSED");
     else
       report integer'image(total_errors) & " total errors" severity warning;
     end if;

@@ -15,8 +15,8 @@ end entity btu;
 
 architecture rtl of btu is
   signal adout: std_logic_vector(XLEN-1 downto 0);
-  signal co, ovf, lt, ltu, eq, output: std_logic;
-  signal outcode: std_logic_vector(1 downto 0);
+  signal co, ovf, lt, ltu, eq: std_logic;
+  signal outcode: std_logic_vector(3 downto 0);
 
 
 begin
@@ -35,11 +35,13 @@ begin
   ltu <= not co;
   eq <= '1' when unsigned(adout) = 0 else '0';
 
-  outcode <= cond(2 downto 1);
-  output <= lt when outcode = "10" else
-            ltu when outcode = "11" else
-            eq when outcode = "00" else
-            '0';
-
-  take_branch <= (cond(0) xor output) and enable;
+  outcode <= enable & cond;
+  with outcode select
+    take_branch <= lt when "1100",
+                   not lt when "1101",
+                   ltu when "1110",
+                   not ltu when "1111",
+                   eq when "1000",
+                   not eq when "1001",
+                   '0' when others;
 end architecture rtl;

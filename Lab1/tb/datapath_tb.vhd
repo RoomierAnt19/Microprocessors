@@ -24,11 +24,11 @@ begin
   uut: entity work.data_path(arch)
     port map(
       cw => cw    ,
-      imm    => imm    ,
-      asel   => asel   ,
-      bsel   => bsel   ,
-      ALUfunc=> ALUfunc,
-      dsel   => dsel   ,
+      input.imm    => imm    ,
+      input.asel   => asel   ,
+      input.bsel   => bsel   ,
+      input.ALUfunc=> ALUfunc,
+      input.dsel   => dsel   ,
       Memin    => Memin    ,
       clk    => clk    ,
       rst    => rst    ,
