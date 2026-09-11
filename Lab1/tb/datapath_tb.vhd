@@ -1,12 +1,14 @@
+
+
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
 use work.my_package.all;
 
-entity datapath_tb is
-end datapath_tb;
+entity datapath_testbench is
+end datapath_testbench;
 
-architecture arch of datapath_tb is
+architecture arch of datapath_testbench is
   signal  imm    : std_logic_vector(15 downto 0):="0000000010101010";
   signal  asel   : std_logic_vector(2 downto 0):="000";
   signal  bsel   : std_logic_vector(2 downto 0):="000";
@@ -17,18 +19,18 @@ architecture arch of datapath_tb is
   signal  rst    : std_logic:='1';
   signal  Memout   : std_logic_vector(15 downto 0);
   signal  Addr   : std_logic_vector(15 downto 0);
-  signal  flags  : flag_array;
+  signal  flags  : flag_array
   signal  cw     : control_t_array;
 begin
 
   uut: entity work.data_path(arch)
     port map(
       cw => cw    ,
-      input.imm    => imm    ,
-      input.asel   => asel   ,
-      input.bsel   => bsel   ,
-      input.ALUfunc=> ALUfunc,
-      input.dsel   => dsel   ,
+      imm    => imm    ,
+      asel   => asel   ,
+      bsel   => bsel   ,
+      ALUfunc=> ALUfunc,
+      dsel   => dsel   ,
       Memin    => Memin    ,
       clk    => clk    ,
       rst    => rst    ,
