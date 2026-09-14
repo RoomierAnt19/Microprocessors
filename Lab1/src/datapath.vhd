@@ -1,13 +1,15 @@
 library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
-use work.my_package.all;
+use work.project_types.all;
 
 
 entity data_path is 
   Port (
          input: in control_word;
-         clk: in std_logic
+         clk: in std_logic;
+         reset: in std_logic;
+         PCie: in std_logic
        );
 end data_path;
 
@@ -24,7 +26,7 @@ begin
               )
   port map (
              clk => clk,
-             reset => '0',
+             reset => reset,
              den => input.dlen,
              dsel => input.dsel,
              din => d_bus,
@@ -62,7 +64,8 @@ begin
              clk => clk,
              d => alu_d,
              q => pc_q,
-             count => input.PCie,
+             count => PCie,
+             reset => reset,
              load => branch
            );
 
