@@ -14,7 +14,7 @@ entity data_path is
 end data_path;
 
 architecture arch of data_path is
-  signal branch : std_logic;
+  signal take_branch, branch : std_logic;
   signal a,b, d_bus, a_bus, b_bus, alu_d, pc_q: std_logic_vector(31 downto 0);
 
 begin
@@ -56,7 +56,7 @@ begin
              RS2 => b,
              cond => input.BRcond,
              enable => input.isBr,
-             take_branch => branch 
+             take_branch => take_branch 
            );
 
   pc : entity work.pc
@@ -80,6 +80,8 @@ begin
   with input.IMMBsel select 
     b_bus <= b when '0',
              input.IMM when others;
+
+  branch <= take_branch or input.PClen;
 
 
 end architecture arch;
