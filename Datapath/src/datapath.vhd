@@ -6,10 +6,12 @@ use work.project_types.all;
 
 entity data_path is 
   Port (
-         input: in control_word;
+         cw: in control_word;
          clk: in std_logic;
-         reset: in std_logic;
-         PCie: in std_logic
+         rst: in std_logic;
+         Dbugsel: in Std_Logic_Vector(4 downto 0);
+         Dbug: out Std_Logic_Vector(31 downto 0);
+         PC_out: out Std_Logic_Vector(31 downto 0)
        );
 end data_path;
 
@@ -26,14 +28,16 @@ begin
               )
   port map (
              clk => clk,
-             reset => reset,
-             den => input.dlen,
-             dsel => input.dsel,
+             reset => rst,
+             den => cw.dlen,
+             dsel => cw.dsel,
              din => d_bus,
-             asel => input.asel,
-             bsel => input.bsel,
+             asel => cw.asel,
+             bsel => cw.bsel,
              a => a,
-             b => b
+             b => b,
+             dbugsel => Dbugsel,
+             dbug => Dbug
            );
 
   alu : entity work.alu
@@ -44,7 +48,7 @@ begin
              A => a_bus,
              B => b_bus,
              D => alu_d,
-             func => input.ALUFunc
+             func => cw.ALUFunc
            );
 
   btu : entity work.btu
@@ -54,8 +58,8 @@ begin
   port map (
              RS1 => a,
              RS2 => b,
-             cond => input.BRcond,
-             enable => input.isBr,
+             cond => cw.BRcond,
+             enable => cw.isBr,
              take_branch => take_branch 
            );
 
@@ -64,24 +68,26 @@ begin
              clk => clk,
              d => alu_d,
              q => pc_q,
-             count => PCie,
-             reset => reset,
+             count => cw.PCie,
+             reset => rst,
              load => branch
            );
 
-  with input.PCDsel select 
-    d_bus <= pc_q when '0',
+  with cw.PCDsel select 
+    d_bus <= pc_q when '1',
              alu_d when others;
 
-  with input.PCAsel select 
+  with cw.PCAsel select 
     a_bus <= a when '0',
              pc_q when others;
 
-  with input.IMMBsel select 
+  with cw.IMMBsel select 
     b_bus <= b when '0',
-             input.IMM when others;
+             cw.IMM when others;
 
-  branch <= take_branch or input.PClen;
+  branch <= take_branch or cw.PCle;
+
+  PC_out <= pc_q;
 
 
 end architecture arch;

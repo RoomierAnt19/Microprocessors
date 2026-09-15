@@ -31,7 +31,7 @@ begin
   q_next <=
     q_count when "001",
     q_i when "000",
-    (others => '0') when "1---",
-    d when others;
+    (others => '0') when "1--",
+    d(31 downto 2) when others;
 end architecture Behavioral;
 

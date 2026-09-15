@@ -1,19 +1,34 @@
+--------------------------------------------------------------------------------
+-- Copyright (c) 2026 Larry D. Pyeatt
+-- All rights reserved.
+--------------------------------------------------------------------------------
 
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.std_logic_arith.ALL;
-use ieee.math_real.log2;
-use ieee.math_real.ceil;
+use ieee.math_real.ALL;
 
 package project_types is
 
   -- type slv_array_32 is array(natural range <>) of std_logic_vector(31 downto 0);
 
   -- Enumerated type for instruction categories
-  type instruction_type_t is (AUIPC, LUI, JAL, JALR, BRANCH, LOAD, STORE,
-                              RI, RR, FENCE, ECALL, ILLEGAL);
+  type instruction_type_t is (AUIPC, -- Register <- PC + Immediate
+                              LUI,   -- Register <- Immediate
+                              JAL,   -- Jump And Link (PC relative: target addr
+                                     -- is PC + Immediate)
+                              JALR,  -- Jump And Link Register (target addr is
+                                     -- in a Register)
+                              BRANCH,-- PC relative conditional branch
+                              LOAD,  -- 5 variants: LB, LBU, LH, LHU, LW
+                              STORE, -- 3 variants: SB, SH, SW
+                              RI,    -- Register <- Register op Immediate
+                              RR,    -- Register <- Register op Register
+                              FENCE, -- Wait for all writes to complete
+                              ECALL, -- Software interrupt
+                              ILLEGAL);  
                               
-  -- a record type to for bundling the signals from the instruction decoder to the datapath  
+  -- a record type to for bundling the signals from the instruction decoder to the datapath 
   type control_word is record
     Asel    : std_logic_vector(4 downto 0);
     Bsel    : std_logic_vector(4 downto 0);
@@ -22,7 +37,8 @@ package project_types is
     PCAsel  : std_logic;
     IMMBsel : std_logic;
     PCDsel  : std_logic;
-    PClen   : std_logic;
+    PCie    : std_logic;  -- You may want to treat this separately.
+    PCle    : std_logic;  -- You may want to treat this separately.
     isBR    : std_logic;
     BRcond  : std_logic_vector(2 downto 0);
     ALUFunc : std_logic_vector(3 downto 0);
@@ -72,8 +88,8 @@ package body project_types is
       when "0110111" => return_value := LUI;
       when "1101111" => return_value := JAL;
       when "1100111" => return_value := JALR;
-      
-      when "1100011" => return_value := BRANCH; -- chack branch condition to make sure instruction is legal
+      -- check branch condition to make sure instruction is legal
+      when "1100011" => return_value := BRANCH; 
       
       when "0000011" =>
         case instruction(14 downto 12) is

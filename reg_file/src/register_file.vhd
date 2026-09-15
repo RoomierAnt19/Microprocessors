@@ -14,7 +14,9 @@ entity register_file is
            asel : in STD_LOGIC_VECTOR (Nsel-1 downto 0);
            bsel : in STD_LOGIC_VECTOR (Nsel-1 downto 0);
            a : out STD_LOGIC_vector(Bits-1 downto 0);
-           b : out STD_LOGIC_vector(Bits-1 downto 0)
+           b : out STD_LOGIC_vector(Bits-1 downto 0);
+           DBug : out STD_LOGIC_vector(Bits-1 downto 0);
+           DBugsel : in STD_LOGIC_VECTOR (Nsel-1 downto 0)
         );
 end register_file;
 
@@ -43,6 +45,7 @@ regs: for i in 1 to 2**Nsel-1 generate
 array_reg(0) <= (others => '0');
 a <= array_reg(to_integer(unsigned(asel)));
 b <= array_reg(to_integer(unsigned(bsel)));
+DBug <= array_reg(to_integer(unsigned(DBugsel)));
 
 
 end Behavioral;

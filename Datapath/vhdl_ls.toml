@@ -4,4 +4,5 @@ defaultlib.files = [
   '../ALU/**/*.vhd',
   '../reg_file/**/*.vhd',
   '**/*.vhd',
+  '../Package/*.vhd',
 ]
