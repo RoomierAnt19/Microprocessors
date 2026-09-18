@@ -146,7 +146,7 @@ architecture Behavioral of RISCV_datapath_testbench is
     PCAsel  => '0',
     IMMBsel => '0',
     PCDsel  => '0',
-    PCie    => '0',
+    PCie  => '0',
     PCle    => '0',
     isBR    => '0',
     BRcond  => "000",

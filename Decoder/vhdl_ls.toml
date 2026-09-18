@@ -1,5 +1,9 @@
 [libraries]
 defaultlib.files = [
+  '../Datapath/**/*.vhd',
+  '../reg_file/**/*.vhd',
+  '../ALU/**/*.vhd',
+  '../branch_test/src/btu.vhd',
   '**/*.vhd',
   '../Package/*.vhd',
 ]

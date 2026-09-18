@@ -1,6 +1,6 @@
 [libraries]
 defaultlib.files = [
-  '../branch_test/**/*.vhd',
+  '../branch_test/src/btu.vhd',
   '../ALU/**/*.vhd',
   '../reg_file/**/*.vhd',
   '**/*.vhd',

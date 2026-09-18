@@ -37,8 +37,8 @@ package project_types is
     PCAsel  : std_logic;
     IMMBsel : std_logic;
     PCDsel  : std_logic;
-    PCie    : std_logic;  -- You may want to treat this separately.
     PCle    : std_logic;  -- You may want to treat this separately.
+    PCie    : std_logic;  -- You may want to treat this separately.
     isBR    : std_logic;
     BRcond  : std_logic_vector(2 downto 0);
     ALUFunc : std_logic_vector(3 downto 0);
@@ -141,12 +141,15 @@ package body project_types is
                  instruction(31 downto 25) &
                  instruction(11 downto 7);
                  
-      b_imm   := "0000000000000000000" &
-                 instruction(31) &
-                 instruction(7) &
-                 instruction (30 downto 25) &
-                 instruction(11 downto 8) &
-                 "0";
+                 --
+      b_imm :=  std_logic_vector(signed(SXT(instruction(31) & instruction(7) & 
+                 instruction (30 downto 25) & instruction(11 downto 8) & "0",32)));
+      -- b_imm   := "0000000000000000000" &
+      --            instruction(31) &
+      --            instruction(7) &
+      --            instruction (30 downto 25) &
+      --            instruction(11 downto 8) &
+      --            "0";
 
     case i_type is
       when LUI|AUIPC =>
