@@ -22,6 +22,7 @@ begin
 
   cw.Bsel <= instruction(24 downto 20);
   cw.Dsel <= instruction(11 downto 7);
+  cw.BRcond <= instruction(14 downto 12);
 
   with instruction_type select
     cw.Asel <= (others => '0') when LUI,
@@ -59,8 +60,6 @@ begin
     cw.isBR <= '1' when BRANCH,
                '0' when others;
 
-  cw.BRcond <= instruction(14 downto 12);
-
   with instruction(14 downto 12) select
     is_shift_imm <= TRUE when "001" or "101",
                     FALSE when others;
@@ -69,7 +68,7 @@ begin
     is_RI <= TRUE when RI,
              FALSE when others;
 
-  top_ALU_func <= instruction(30) when is_shift_imm and is_RI
+  top_ALU_func <= instruction(30) when is_shift_imm
                   else '0';
 
   with instruction_type select
