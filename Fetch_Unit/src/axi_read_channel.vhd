@@ -26,7 +26,7 @@ entity axi_read_channel is
          start : in std_logic;
          addr : in std_logic_vector(C_M_AXI_ADDR_WIDTH-1 downto 0);
          rdata : out std_logic_vector(C_M_AXI_ADDR_WIDTH-1 downto 0);
-         -- raddr : out std_logic_vector(C_M_AXI_ADDR_WIDTH-1 downto 0); -- for future use
+         raddr : out std_logic_vector(C_M_AXI_ADDR_WIDTH-1 downto 0); -- for future use
          ready : out  std_logic;
 
          M_AXI_ARID	: out std_logic_vector(C_M_AXI_ID_WIDTH-1 downto 0); -- Master Interface Read Address.
@@ -45,7 +45,7 @@ entity axi_read_channel is
          M_AXI_RDATA	: in std_logic_vector(C_M_AXI_DATA_WIDTH-1 downto 0); -- Master Read Data
          M_AXI_RRESP	: in std_logic_vector(1 downto 0); -- Read response. This signal indicates the status of the read transfer
          M_AXI_RLAST	: in std_logic; -- Read last. This signal indicates the last transfer in a read burst
-         M_AXI_RUSER	: in std_logic_vector(C_M_AXI_RUSER_WIDTH-1 downto 0); -- Optional User-defined signal in the read address channel.
+         -- M_AXI_RUSER	: in std_logic_vector(C_M_AXI_RUSER_WIDTH-1 downto 0); -- Optional User-defined signal in the read address channel.
          M_AXI_RVALID	: in std_logic; -- Read valid. This signal indicates that the channel is signaling the required read data.
          M_AXI_RREADY	: out std_logic -- Read ready. This signal indicates that the master can accept the read data and response information.
        );
@@ -55,21 +55,22 @@ end entity axi_read_channel;
 architecture rtl of axi_read_channel is
   type RAC_state_t is (RESET, INIT, ACCEPT, WAITING);
   signal RAC_state,RAC_state_next, RAC_state_next_i: RAC_state_t;
-  signal RAC_INIT_next, RAC_ACCEPT_next, RAC_WAITING_next, RAC_ACCEPT, RAC_INIT: RAC_state_t;
+  signal RAC_INIT_next, RAC_ACCEPT_next, RAC_WAITING_next: RAC_state_t;
 
   type RC_state_t is (RESET, WAITING, ACCEPT);
   signal RC_state,RC_state_next,RC_state_next_i: RC_state_t;
   signal RC_ACCEPT_next, RC_WAITING_next: RC_state_t;
 
   signal ar_latch_enable, r_latch_enable, read_start, read_done : std_logic;
+  signal addr_i : Std_Logic_Vector(31 downto 0);
 begin
   ----------------------------------------------------------------------------------------
   --Storage for RAC
   RAC_state <= RAC_state_next when rising_edge(clk);
   RAC_state_next <= RESET when rst = '1' else RAC_state_next_i;
 
-  with RAC_state select RAC_state_next_i <= RAC_INIT_next when RAC_INIT,
-  RAC_ACCEPT_next when RAC_ACCEPT,
+  with RAC_state select RAC_state_next_i <= RAC_INIT_next when INIT,
+  RAC_ACCEPT_next when ACCEPT,
   RAC_WAITING_next when others;
 
   RAC_INIT_next <= ACCEPT when M_AXI_ARREADY = '1' else INIT;
@@ -106,16 +107,31 @@ begin
 
 
   ----------------------------------------------------------------------------------------
-  raddr_reg : entity work.gen_reg
+  ---Hold the addr while reading
+  axi_radr_reg : entity work.gen_reg
   generic map (
                 N => 32
               )
   port map (
              clk => clk,
              d => addr,
-             q => M_AXI_ARADDR,
+             q => addr_i,
              reset => rst,
              enable => ar_latch_enable
+           ); 
+
+  M_AXI_ARADDR <= addr_i;
+  --- Latches the address thta the data coame from 
+  raddr_reg : entity work.gen_reg
+  generic map (
+                N => 32
+              )
+  port map (
+             clk => clk,
+             d => addr_i,
+             q => raddr,
+             reset => rst,
+             enable => r_latch_enable
            ); 
 
   rdata_reg : entity work.gen_reg
@@ -133,7 +149,7 @@ begin
   M_AXI_ARID <= (others => '0');
   M_AXI_ARLEN <= (others => '0');
   M_AXI_ARSIZE <= "010";
-  M_AXI_ARBURST <= "00";
+  M_AXI_ARBURST <= "01";
   M_AXI_ARLOCK <= '0';
   M_AXI_ARCACHE <= (others => '0');
   M_AXI_ARPROT <= "000";

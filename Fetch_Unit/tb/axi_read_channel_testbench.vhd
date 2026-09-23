@@ -184,11 +184,11 @@ begin
   ------------------------------------------------------------------------------
   -- Unit under test
   ------------------------------------------------------------------------------
-  uut : entity work.axi_read_channel(behavioral)
+  uut : entity work.axi_read_channel(rtl)
     generic map (
-      ADDR_WIDTH => ADDR_WIDTH,
-      DATA_WIDTH => DATA_WIDTH,
-      ID_WIDTH   => ID_WIDTH
+      C_M_AXI_ADDR_WIDTH => ADDR_WIDTH,
+      C_M_AXI_DATA_WIDTH => DATA_WIDTH,
+      C_M_AXI_ID_WIDTH   => ID_WIDTH
       )
     port map (
       clk => clk,
