@@ -8,16 +8,16 @@ entity axi_read_channel is
             -- Users can add generic parameters here
 
             -- User parameters ends
-            C_M_TARGET_SLAVE_BASE_ADDR : std_logic_vector	:= x"00000000"; -- Base address of targeted slave
-            C_M_AXI_BURST_LEN	     : integer	:= 1; -- Burst Length. Supports 1, 2, 4, 8, 16, 32, 64, 128, 256 burst lengths
+            -- C_M_TARGET_SLAVE_BASE_ADDR : std_logic_vector	:= x"00000000"; -- Base address of targeted slave
+            -- C_M_AXI_BURST_LEN	     : integer	:= 1; -- Burst Length. Supports 1, 2, 4, 8, 16, 32, 64, 128, 256 burst lengths
             C_M_AXI_ID_WIDTH	     : integer	:= 1; -- Thread ID Width
             C_M_AXI_ADDR_WIDTH	   : integer	:= 32; -- Width of Address Bus
             C_M_AXI_DATA_WIDTH	   : integer	:= 32; -- Width of Data Bus
-            C_M_AXI_AWUSER_WIDTH   : integer	:= 0; -- Width of User Write Address Bus
+            -- C_M_AXI_AWUSER_WIDTH   : integer	:= 0; -- Width of User Write Address Bus
             C_M_AXI_ARUSER_WIDTH   : integer	:= 0; -- Width of User Read Address Bus
-            C_M_AXI_WUSER_WIDTH	   : integer	:= 0; -- Width of User Write Data Bus
-            C_M_AXI_RUSER_WIDTH	   : integer	:= 0; -- Width of User Read Data Bus
-            C_M_AXI_BUSER_WIDTH	   : integer	:= 0  -- Width of User Response Bus
+            -- C_M_AXI_WUSER_WIDTH	   : integer	:= 0; -- Width of User Write Data Bus
+            C_M_AXI_RUSER_WIDTH	   : integer	:= 0 -- Width of User Read Data Bus
+            -- C_M_AXI_BUSER_WIDTH	   : integer	:= 0  -- Width of User Response Bus
           );
   port (
          clk : in std_logic;
@@ -26,7 +26,7 @@ entity axi_read_channel is
          start : in std_logic;
          addr : in std_logic_vector(C_M_AXI_ADDR_WIDTH-1 downto 0);
          rdata : out std_logic_vector(C_M_AXI_ADDR_WIDTH-1 downto 0);
-         raddr : out std_logic_vector(C_M_AXI_ADDR_WIDTH-1 downto 0);
+         -- raddr : out std_logic_vector(C_M_AXI_ADDR_WIDTH-1 downto 0); -- for future use
          ready : out  std_logic;
 
          M_AXI_ARID	: out std_logic_vector(C_M_AXI_ID_WIDTH-1 downto 0); -- Master Interface Read Address.
@@ -38,7 +38,6 @@ entity axi_read_channel is
          M_AXI_ARCACHE	: out std_logic_vector(3 downto 0); -- Memory type. This signal indicates how transactions are required to progress through a system.
          M_AXI_ARPROT	: out std_logic_vector(2 downto 0); -- Protection type. This signal indicates the privilege and security level of the transaction, and whether the transaction is a data access or an instruction access.
          M_AXI_ARQOS	: out std_logic_vector(3 downto 0); -- Quality of Service, QoS identifier sent for each read transaction
-         M_AXI_ARUSER	: out std_logic_vector(C_M_AXI_ARUSER_WIDTH-1 downto 0); -- Optional User-defined signal in the read address channel.
          M_AXI_ARVALID	: out std_logic; -- Write address valid. This signal indicates that the channel is signaling valid read address and control information
          M_AXI_ARREADY	: in std_logic; -- Read address ready. This signal indicates that the slave is ready to accept an address and associated control signals
                                        -- AXI Read Data Channel
@@ -59,11 +58,12 @@ architecture rtl of axi_read_channel is
   signal RAC_INIT_next, RAC_ACCEPT_next, RAC_WAITING_next, RAC_ACCEPT, RAC_INIT: RAC_state_t;
 
   type RC_state_t is (RESET, WAITING, ACCEPT);
-  signal RC_state,RC_state_next: RC_state_t;
+  signal RC_state,RC_state_next,RC_state_next_i: RC_state_t;
+  signal RC_ACCEPT_next, RC_WAITING_next: RC_state_t;
 
-  signal ar_latch_enable, read_start, read_done : std_logic;
+  signal ar_latch_enable, r_latch_enable, read_start, read_done : std_logic;
 begin
- ----------------------------------------------------------------------------------------
+  ----------------------------------------------------------------------------------------
   --Storage for RAC
   RAC_state <= RAC_state_next when rising_edge(clk);
   RAC_state_next <= RESET when rst = '1' else RAC_state_next_i;
@@ -81,15 +81,34 @@ begin
   M_AXI_ARVALID <= ar_latch_enable;
   read_start <= '1' when RAC_state = INIT and M_AXI_ARREADY = '1' else '0';
 
-  -- More outputs for RAC state machine 
+  -- Moore outputs for RAC state machine 
   ready <= '1' when RAC_state = WAITING else '0';
 
- ----------------------------------------------------------------------------------------
+  ----------------------------------------------------------------------------------------
   --Storage for RC
- ----------------------------------------------------------------------------------------
+  RC_state <= RC_state_next when rising_edge(clk);
+  RC_state_next <= RESET when rst = '1' else RC_state_next_i;
+
+  with RC_state select RC_state_next_i <= 
+  RC_WAITING_next when WAITING,
+  RC_ACCEPT_next when others;
+
+  RC_WAITING_next <= ACCEPT when read_start = '1' else 
+                     WAITING;
+
+  RC_ACCEPT_next <= WAITING when M_AXI_RVALID = '1' else 
+                    ACCEPT;
+
+  -- Mealy outputs for RC state machine
+  r_latch_enable <= '1' when RC_state = ACCEPT and M_AXI_RVALID = '1';
+  M_AXI_RREADY <= r_latch_enable;
+  read_done <= r_latch_enable;
+
+
+  ----------------------------------------------------------------------------------------
   raddr_reg : entity work.gen_reg
   generic map (
-                N => 32 
+                N => 32
               )
   port map (
              clk => clk,
@@ -98,4 +117,26 @@ begin
              reset => rst,
              enable => ar_latch_enable
            ); 
+
+  rdata_reg : entity work.gen_reg
+  generic map (
+                N => 32
+              )
+  port map (
+             clk => clk,
+             d => M_AXI_RDATA,
+             q => rdata,
+             reset => rst,
+             enable => r_latch_enable
+           ); 
+  ----------------------------------------------------------------------------------------- 
+  M_AXI_ARID <= (others => '0');
+  M_AXI_ARLEN <= (others => '0');
+  M_AXI_ARSIZE <= "010";
+  M_AXI_ARBURST <= "00";
+  M_AXI_ARLOCK <= '0';
+  M_AXI_ARCACHE <= (others => '0');
+  M_AXI_ARPROT <= "000";
+  M_AXI_ARQOS <= "0000";
+  ----------------------------------------------------------------------------------------- 
 end architecture rtl;
