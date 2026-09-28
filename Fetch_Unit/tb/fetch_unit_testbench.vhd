@@ -35,7 +35,7 @@ begin
     wait for 10 ns;
     fetch <= '0';
     wait for 15 ns;
-    wait until ready = '1';   
+    wait until ready = '1';
 
     wait for 10 ns;
     PC <= x"00000004";

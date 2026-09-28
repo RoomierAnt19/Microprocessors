@@ -59,12 +59,12 @@ architecture rtl of axi_read_channel is
 
   type RC_state_t is (RESET, WAITING, ACCEPT);
   signal RC_state,RC_state_next,RC_state_next_i: RC_state_t;
-  signal RC_ACCEPT_next, RC_WAITING_next: RC_state_t;
+  signal RC_WAITING_next: RC_state_t;
 
-  signal ar_latch_enable, r_latch_enable, read_start, read_done : std_logic;
+  signal ar_latch_enable, r_latch_enable, read_done : std_logic;
   signal addr_i : Std_Logic_Vector(31 downto 0);
 begin
-  ----------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------- 
   --Storage for RAC
   RAC_state <= RAC_state_next when rising_edge(clk);
   RAC_state_next <= RESET when rst = '1' else RAC_state_next_i;
@@ -76,17 +76,14 @@ begin
 
   RAC_INIT_next <= ACCEPT when M_AXI_ARREADY = '1' else INIT;
   RAC_ACCEPT_next <= WAITING when read_done = '1' else ACCEPT;
-  RAC_WAITING_next <= INIT when start = '1' and RC_state = WAITING else WAITING;
-
+  RAC_WAITING_next <= INIT when start = '1' and RC_state = WAITING 
+                      else WAITING;
   -- Mealy outputs for RAC state machine 
-  ar_latch_enable <= '1' when RAC_state = WAITING and start = '1' else '0';
-  --read_start <= '1' when RAC_state = INIT and M_AXI_ARREADY = '1' else '0';
-
+  ar_latch_enable <= '1' when RAC_state = WAITING and start = '1'
+                     else '0';
   -- Moore outputs for RAC state machine
-  ready <= '1' when RC_state = WAITING and RAC_state = WAITING else '0';
   M_AXI_ARVALID <= '1' when RAC_state = INIT else '0';
-
-  ----------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------- 
   --Storage for RC
   RC_state <= RC_state_next when rising_edge(clk);
   RC_state_next <= RESET when rst = '1' else RC_state_next_i;
@@ -95,16 +92,17 @@ begin
   RC_WAITING_next when WAITING,
   WAITING when others;
 
-  RC_WAITING_next <= ACCEPT when M_AXI_RVALID = '1' else 
+  RC_WAITING_next <= ACCEPT when M_AXI_RVALID = '1' else
                      WAITING;
-
   -- Mealy outputs for RC state machine
-  r_latch_enable <= '1' when RC_state = WAITING and M_AXI_RVALID = '1' else '0';
+  r_latch_enable <= '1' when RC_state_next_i = ACCEPT else '0';
   read_done <= r_latch_enable;
   -- Moore outputs for RC state machine
   M_AXI_RREADY <= '1' when RC_state = WAITING else '0';
-
   ----------------------------------------------------------------------------------------
+  --Moore output for RAC AND RC state machines
+  ready <= '1' when RC_state = WAITING and RAC_state = WAITING else '0';
+----------------------------------------------------------------------------------------- 
   ---Hold the addr while reading
   axi_radr_reg : entity work.gen_reg
   generic map (
@@ -117,7 +115,6 @@ begin
              reset => rst,
              enable => ar_latch_enable
            ); 
-
   M_AXI_ARADDR <= addr_i;
   --- Latches the address thta the data coame from 
   raddr_reg : entity work.gen_reg
@@ -143,7 +140,7 @@ begin
              reset => rst,
              enable => r_latch_enable
            ); 
-  ----------------------------------------------------------------------------------------- 
+----------------------------------------------------------------------------------------- 
   M_AXI_ARID <= (others => '0');
   M_AXI_ARLEN <= (others => '0');
   M_AXI_ARSIZE <= "010";
