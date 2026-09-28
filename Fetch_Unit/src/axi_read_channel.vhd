@@ -13,11 +13,11 @@ entity axi_read_channel is
             C_M_AXI_ID_WIDTH	     : integer	:= 1; -- Thread ID Width
             C_M_AXI_ADDR_WIDTH	   : integer	:= 32; -- Width of Address Bus
             C_M_AXI_DATA_WIDTH	   : integer	:= 32; -- Width of Data Bus
-            -- C_M_AXI_AWUSER_WIDTH   : integer	:= 0; -- Width of User Write Address Bus
+                                                   -- C_M_AXI_AWUSER_WIDTH   : integer	:= 0; -- Width of User Write Address Bus
             C_M_AXI_ARUSER_WIDTH   : integer	:= 0; -- Width of User Read Address Bus
-            -- C_M_AXI_WUSER_WIDTH	   : integer	:= 0; -- Width of User Write Data Bus
+                                                   -- C_M_AXI_WUSER_WIDTH	   : integer	:= 0; -- Width of User Write Data Bus
             C_M_AXI_RUSER_WIDTH	   : integer	:= 0 -- Width of User Read Data Bus
-            -- C_M_AXI_BUSER_WIDTH	   : integer	:= 0  -- Width of User Response Bus
+                                                  -- C_M_AXI_BUSER_WIDTH	   : integer	:= 0  -- Width of User Response Bus
           );
   port (
          clk : in std_logic;
@@ -45,7 +45,7 @@ entity axi_read_channel is
          M_AXI_RDATA	: in std_logic_vector(C_M_AXI_DATA_WIDTH-1 downto 0); -- Master Read Data
          M_AXI_RRESP	: in std_logic_vector(1 downto 0); -- Read response. This signal indicates the status of the read transfer
          M_AXI_RLAST	: in std_logic; -- Read last. This signal indicates the last transfer in a read burst
-         -- M_AXI_RUSER	: in std_logic_vector(C_M_AXI_RUSER_WIDTH-1 downto 0); -- Optional User-defined signal in the read address channel.
+                                     -- M_AXI_RUSER	: in std_logic_vector(C_M_AXI_RUSER_WIDTH-1 downto 0); -- Optional User-defined signal in the read address channel.
          M_AXI_RVALID	: in std_logic; -- Read valid. This signal indicates that the channel is signaling the required read data.
          M_AXI_RREADY	: out std_logic -- Read ready. This signal indicates that the master can accept the read data and response information.
        );
@@ -69,21 +69,22 @@ begin
   RAC_state <= RAC_state_next when rising_edge(clk);
   RAC_state_next <= RESET when rst = '1' else RAC_state_next_i;
 
-  with RAC_state select RAC_state_next_i <= RAC_INIT_next when INIT,
-  RAC_ACCEPT_next when ACCEPT,
-  RAC_WAITING_next when others;
+  with RAC_state select RAC_state_next_i <= 
+        RAC_INIT_next when INIT,
+        RAC_ACCEPT_next when ACCEPT,
+        RAC_WAITING_next when others;
 
   RAC_INIT_next <= ACCEPT when M_AXI_ARREADY = '1' else INIT;
   RAC_ACCEPT_next <= WAITING when read_done = '1' else ACCEPT;
-  RAC_WAITING_next <= INIT when start = '1' else WAITING;
+  RAC_WAITING_next <= INIT when start = '1' and RC_state = WAITING else WAITING;
 
   -- Mealy outputs for RAC state machine 
   ar_latch_enable <= '1' when RAC_state = WAITING and start = '1' else '0';
-  M_AXI_ARVALID <= ar_latch_enable;
-  read_start <= '1' when RAC_state = INIT and M_AXI_ARREADY = '1' else '0';
+  --read_start <= '1' when RAC_state = INIT and M_AXI_ARREADY = '1' else '0';
 
-  -- Moore outputs for RAC state machine 
-  ready <= '1' when RAC_state = WAITING else '0';
+  -- Moore outputs for RAC state machine
+  ready <= '1' when RC_state = WAITING and RAC_state = WAITING else '0';
+  M_AXI_ARVALID <= '1' when RAC_state = INIT else '0';
 
   ----------------------------------------------------------------------------------------
   --Storage for RC
@@ -92,19 +93,16 @@ begin
 
   with RC_state select RC_state_next_i <= 
   RC_WAITING_next when WAITING,
-  RC_ACCEPT_next when others;
+  WAITING when others;
 
-  RC_WAITING_next <= ACCEPT when read_start = '1' else 
+  RC_WAITING_next <= ACCEPT when M_AXI_RVALID = '1' else 
                      WAITING;
 
-  RC_ACCEPT_next <= WAITING when M_AXI_RVALID = '1' else 
-                    ACCEPT;
-
   -- Mealy outputs for RC state machine
-  r_latch_enable <= '1' when RC_state = ACCEPT and M_AXI_RVALID = '1';
-  M_AXI_RREADY <= r_latch_enable;
+  r_latch_enable <= '1' when RC_state = WAITING and M_AXI_RVALID = '1' else '0';
   read_done <= r_latch_enable;
-
+  -- Moore outputs for RC state machine
+  M_AXI_RREADY <= '1' when RC_state = WAITING else '0';
 
   ----------------------------------------------------------------------------------------
   ---Hold the addr while reading
@@ -154,5 +152,5 @@ begin
   M_AXI_ARCACHE <= (others => '0');
   M_AXI_ARPROT <= "000";
   M_AXI_ARQOS <= "0000";
-  ----------------------------------------------------------------------------------------- 
+----------------------------------------------------------------------------------------- 
 end architecture rtl;
