@@ -12,12 +12,7 @@ entity axi_read_channel is
             -- C_M_AXI_BURST_LEN	     : integer	:= 1; -- Burst Length. Supports 1, 2, 4, 8, 16, 32, 64, 128, 256 burst lengths
             C_M_AXI_ID_WIDTH	     : integer	:= 1; -- Thread ID Width
             C_M_AXI_ADDR_WIDTH	   : integer	:= 32; -- Width of Address Bus
-            C_M_AXI_DATA_WIDTH	   : integer	:= 32; -- Width of Data Bus
-                                                   -- C_M_AXI_AWUSER_WIDTH   : integer	:= 0; -- Width of User Write Address Bus
-            C_M_AXI_ARUSER_WIDTH   : integer	:= 0; -- Width of User Read Address Bus
-                                                   -- C_M_AXI_WUSER_WIDTH	   : integer	:= 0; -- Width of User Write Data Bus
-            C_M_AXI_RUSER_WIDTH	   : integer	:= 0 -- Width of User Read Data Bus
-                                                  -- C_M_AXI_BUSER_WIDTH	   : integer	:= 0  -- Width of User Response Bus
+            C_M_AXI_DATA_WIDTH	   : integer	:= 32 -- Width of Data Bus
           );
   port (
          clk : in std_logic;
