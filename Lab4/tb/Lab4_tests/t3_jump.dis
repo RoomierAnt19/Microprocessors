@@ -1,0 +1,71 @@
+
+t3_jump.elf:     file format elf32-littleriscv
+
+
+Disassembly of section .text:
+
+00000000 <_start>:
+   0:	00000193          	li	gp,0
+   4:	00000213          	li	tp,0
+   8:	00100193          	li	gp,1
+   c:	0080006f          	j	14 <_start+0x14>
+  10:	0800006f          	j	90 <fail>
+  14:	00200193          	li	gp,2
+
+00000018 <here>:
+  18:	064000ef          	jal	7c <target>
+  1c:	06a09a63          	bne	ra,a0,90 <fail>
+  20:	00300193          	li	gp,3
+  24:	00100593          	li	a1,1
+  28:	06b61463          	bne	a2,a1,90 <fail>
+  2c:	00400193          	li	gp,4
+  30:	00000697          	auipc	a3,0x0
+
+00000034 <pc_here>:
+  34:	03400713          	li	a4,52
+  38:	00468793          	addi	a5,a3,4 # 34 <pc_here>
+  3c:	04f71a63          	bne	a4,a5,90 <fail>
+  40:	00500193          	li	gp,5
+  44:	08800813          	li	a6,136
+  48:	ff880813          	addi	a6,a6,-8
+  4c:	008800e7          	jalr	8(a6)
+  50:	00100893          	li	a7,1
+  54:	03141e63          	bne	s0,a7,90 <fail>
+  58:	00600193          	li	gp,6
+  5c:	0040006f          	j	60 <pc_here+0x2c>
+  60:	02001863          	bnez	zero,90 <fail>
+  64:	00700193          	li	gp,7
+  68:	00100493          	li	s1,1
+  6c:	02959263          	bne	a1,s1,90 <fail>
+  70:	00000193          	li	gp,0
+  74:	00100213          	li	tp,1
+
+00000078 <park>:
+  78:	0000006f          	j	78 <park>
+
+0000007c <target>:
+  7c:	00008513          	mv	a0,ra
+  80:	00100613          	li	a2,1
+  84:	00008067          	ret
+
+00000088 <indirect>:
+  88:	00100413          	li	s0,1
+  8c:	00008067          	ret
+
+00000090 <fail>:
+  90:	0000006f          	j	90 <fail>
+
+Disassembly of section .riscv.attributes:
+
+00000000 <.riscv.attributes>:
+   0:	1941                	.insn	2, 0x1941
+   2:	0000                	.insn	2, 0x0000
+   4:	7200                	.insn	2, 0x7200
+   6:	7369                	.insn	2, 0x7369
+   8:	01007663          	bgeu	zero,a6,14 <_start+0x14>
+   c:	0000000f          	fence	unknown,unknown
+  10:	7205                	.insn	2, 0x7205
+  12:	3376                	.insn	2, 0x3376
+  14:	6932                	.insn	2, 0x6932
+  16:	7032                	.insn	2, 0x7032
+  18:	0031                	.insn	2, 0x0031

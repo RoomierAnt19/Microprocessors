@@ -75,8 +75,6 @@ entity fetch_unit is
 end fetch_unit;
 
 architecture implementation of fetch_unit is
-  signal size : std_logic_vector(2 downto 0);
-  signal burst : std_logic_vector(1 downto 0);
 
 begin
   u_axi_read_channel : entity work.axi_read_channel
@@ -112,14 +110,11 @@ begin
              M_AXI_RREADY => M_AXI_RREADY
            );
 
-  size <= M_AXI_ARSIZE;
-  burst <= M_AXI_AWBURST;
-
   M_AXI_AWID <= (others => '0');
   M_AXI_AWADDR <= (others => '0');
   M_AXI_AWLEN <= (others => '0');
-  M_AXI_AWSIZE <= size;
-  M_AXI_AWBURST <= burst;
+  M_AXI_AWSIZE <= "010";
+  M_AXI_AWBURST <= "01";
 
   M_AXI_AWLOCK <= '0';
   M_AXI_AWCACHE <= (others => '0');

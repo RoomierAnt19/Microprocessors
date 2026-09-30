@@ -1,0 +1,43 @@
+
+cylon_sim.elf:     file format elf32-littleriscv
+
+
+Disassembly of section .text:
+
+00000000 <_start>:
+   0:	00100513          	li	a0,1
+   4:	000084b7          	lui	s1,0x8
+   8:	00100913          	li	s2,1
+   c:	00400993          	li	s3,4
+
+00000010 <left>:
+  10:	01c000ef          	jal	2c <delay>
+  14:	00151513          	slli	a0,a0,0x1
+  18:	fe951ce3          	bne	a0,s1,10 <left>
+
+0000001c <right>:
+  1c:	010000ef          	jal	2c <delay>
+  20:	00155513          	srli	a0,a0,0x1
+  24:	ff251ce3          	bne	a0,s2,1c <right>
+  28:	fe9ff06f          	j	10 <left>
+
+0000002c <delay>:
+  2c:	00098293          	mv	t0,s3
+  30:	fff28293          	addi	t0,t0,-1
+  34:	fe029ee3          	bnez	t0,30 <delay+0x4>
+  38:	00008067          	ret
+
+Disassembly of section .riscv.attributes:
+
+00000000 <.riscv.attributes>:
+   0:	1941                	.insn	2, 0x1941
+   2:	0000                	.insn	2, 0x0000
+   4:	7200                	.insn	2, 0x7200
+   6:	7369                	.insn	2, 0x7369
+   8:	01007663          	bgeu	zero,a6,14 <left+0x4>
+   c:	0000000f          	fence	unknown,unknown
+  10:	7205                	.insn	2, 0x7205
+  12:	3376                	.insn	2, 0x3376
+  14:	6932                	.insn	2, 0x6932
+  16:	7032                	.insn	2, 0x7032
+  18:	0031                	.insn	2, 0x0031

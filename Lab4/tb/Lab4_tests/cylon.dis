@@ -1,0 +1,44 @@
+
+cylon.elf:     file format elf32-littleriscv
+
+
+Disassembly of section .text:
+
+00000000 <_start>:
+   0:	00100513          	li	a0,1
+   4:	000084b7          	lui	s1,0x8
+   8:	00100913          	li	s2,1
+   c:	000149b7          	lui	s3,0x14
+  10:	88098993          	addi	s3,s3,-1920 # 13880 <delay+0x13850>
+
+00000014 <left>:
+  14:	01c000ef          	jal	30 <delay>
+  18:	00151513          	slli	a0,a0,0x1
+  1c:	fe951ce3          	bne	a0,s1,14 <left>
+
+00000020 <right>:
+  20:	010000ef          	jal	30 <delay>
+  24:	00155513          	srli	a0,a0,0x1
+  28:	ff251ce3          	bne	a0,s2,20 <right>
+  2c:	fe9ff06f          	j	14 <left>
+
+00000030 <delay>:
+  30:	00098293          	mv	t0,s3
+  34:	fff28293          	addi	t0,t0,-1
+  38:	fe029ee3          	bnez	t0,34 <delay+0x4>
+  3c:	00008067          	ret
+
+Disassembly of section .riscv.attributes:
+
+00000000 <.riscv.attributes>:
+   0:	1941                	.insn	2, 0x1941
+   2:	0000                	.insn	2, 0x0000
+   4:	7200                	.insn	2, 0x7200
+   6:	7369                	.insn	2, 0x7369
+   8:	01007663          	bgeu	zero,a6,14 <left>
+   c:	0000000f          	fence	unknown,unknown
+  10:	7205                	.insn	2, 0x7205
+  12:	3376                	.insn	2, 0x3376
+  14:	6932                	.insn	2, 0x6932
+  16:	7032                	.insn	2, 0x7032
+  18:	0031                	.insn	2, 0x0031

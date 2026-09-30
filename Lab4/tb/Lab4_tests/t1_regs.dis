@@ -1,0 +1,135 @@
+
+t1_regs.elf:     file format elf32-littleriscv
+
+
+Disassembly of section .text:
+
+00000000 <_start>:
+   0:	00000513          	li	a0,0
+   4:	00000593          	li	a1,0
+   8:	00100293          	li	t0,1
+   c:	00550533          	add	a0,a0,t0
+  10:	00159593          	slli	a1,a1,0x1
+  14:	0055c5b3          	xor	a1,a1,t0
+  18:	80000b93          	li	s7,-2048
+  1c:	01750533          	add	a0,a0,s7
+  20:	00159593          	slli	a1,a1,0x1
+  24:	0175c5b3          	xor	a1,a1,s7
+  28:	7ffbfc13          	andi	s8,s7,2047
+  2c:	01850533          	add	a0,a0,s8
+  30:	00159593          	slli	a1,a1,0x1
+  34:	0185c5b3          	xor	a1,a1,s8
+  38:	0ffbec93          	ori	s9,s7,255
+  3c:	01950533          	add	a0,a0,s9
+  40:	00159593          	slli	a1,a1,0x1
+  44:	0195c5b3          	xor	a1,a1,s9
+  48:	fffbcd13          	not	s10,s7
+  4c:	01a50533          	add	a0,a0,s10
+  50:	00159593          	slli	a1,a1,0x1
+  54:	01a5c5b3          	xor	a1,a1,s10
+  58:	000ba613          	slti	a2,s7,0
+  5c:	00c50533          	add	a0,a0,a2
+  60:	00159593          	slli	a1,a1,0x1
+  64:	00c5c5b3          	xor	a1,a1,a2
+  68:	000bb693          	sltiu	a3,s7,0
+  6c:	00d50533          	add	a0,a0,a3
+  70:	00159593          	slli	a1,a1,0x1
+  74:	00d5c5b3          	xor	a1,a1,a3
+  78:	01f29713          	slli	a4,t0,0x1f
+  7c:	00e50533          	add	a0,a0,a4
+  80:	00159593          	slli	a1,a1,0x1
+  84:	00e5c5b3          	xor	a1,a1,a4
+  88:	01c75793          	srli	a5,a4,0x1c
+  8c:	00f50533          	add	a0,a0,a5
+  90:	00159593          	slli	a1,a1,0x1
+  94:	00f5c5b3          	xor	a1,a1,a5
+  98:	41c75813          	srai	a6,a4,0x1c
+  9c:	01050533          	add	a0,a0,a6
+  a0:	00159593          	slli	a1,a1,0x1
+  a4:	0105c5b3          	xor	a1,a1,a6
+  a8:	abcde8b7          	lui	a7,0xabcde
+  ac:	01150533          	add	a0,a0,a7
+  b0:	00159593          	slli	a1,a1,0x1
+  b4:	0115c5b3          	xor	a1,a1,a7
+  b8:	00528333          	add	t1,t0,t0
+  bc:	00650533          	add	a0,a0,t1
+  c0:	00159593          	slli	a1,a1,0x1
+  c4:	0065c5b3          	xor	a1,a1,t1
+  c8:	005313b3          	sll	t2,t1,t0
+  cc:	00750533          	add	a0,a0,t2
+  d0:	00159593          	slli	a1,a1,0x1
+  d4:	0075c5b3          	xor	a1,a1,t2
+  d8:	40538e33          	sub	t3,t2,t0
+  dc:	01c50533          	add	a0,a0,t3
+  e0:	00159593          	slli	a1,a1,0x1
+  e4:	01c5c5b3          	xor	a1,a1,t3
+  e8:	40500eb3          	neg	t4,t0
+  ec:	01d50533          	add	a0,a0,t4
+  f0:	00159593          	slli	a1,a1,0x1
+  f4:	01d5c5b3          	xor	a1,a1,t4
+  f8:	01d02f33          	sgtz	t5,t4
+  fc:	01e50533          	add	a0,a0,t5
+ 100:	00159593          	slli	a1,a1,0x1
+ 104:	01e5c5b3          	xor	a1,a1,t5
+ 108:	01d03fb3          	snez	t6,t4
+ 10c:	01f50533          	add	a0,a0,t6
+ 110:	00159593          	slli	a1,a1,0x1
+ 114:	01f5c5b3          	xor	a1,a1,t6
+ 118:	0062aab3          	slt	s5,t0,t1
+ 11c:	01550533          	add	a0,a0,s5
+ 120:	00159593          	slli	a1,a1,0x1
+ 124:	0155c5b3          	xor	a1,a1,s5
+ 128:	00003b33          	snez	s6,zero
+ 12c:	01650533          	add	a0,a0,s6
+ 130:	00159593          	slli	a1,a1,0x1
+ 134:	0165c5b3          	xor	a1,a1,s6
+ 138:	01cec433          	xor	s0,t4,t3
+ 13c:	00850533          	add	a0,a0,s0
+ 140:	00159593          	slli	a1,a1,0x1
+ 144:	0085c5b3          	xor	a1,a1,s0
+ 148:	405454b3          	sra	s1,s0,t0
+ 14c:	00950533          	add	a0,a0,s1
+ 150:	00159593          	slli	a1,a1,0x1
+ 154:	0095c5b3          	xor	a1,a1,s1
+ 158:	00545933          	srl	s2,s0,t0
+ 15c:	01250533          	add	a0,a0,s2
+ 160:	00159593          	slli	a1,a1,0x1
+ 164:	0125c5b3          	xor	a1,a1,s2
+ 168:	0053e9b3          	or	s3,t2,t0
+ 16c:	01350533          	add	a0,a0,s3
+ 170:	00159593          	slli	a1,a1,0x1
+ 174:	0135c5b3          	xor	a1,a1,s3
+ 178:	0079fa33          	and	s4,s3,t2
+ 17c:	01450533          	add	a0,a0,s4
+ 180:	00159593          	slli	a1,a1,0x1
+ 184:	0145c5b3          	xor	a1,a1,s4
+ 188:	00700013          	li	zero,7
+ 18c:	00050533          	add	a0,a0,zero
+ 190:	00159593          	slli	a1,a1,0x1
+ 194:	0005c5b3          	xor	a1,a1,zero
+ 198:	abcde2b7          	lui	t0,0xabcde
+ 19c:	90b28293          	addi	t0,t0,-1781 # abcdd90b <EXPECT_SUM>
+ 1a0:	e6ec2337          	lui	t1,0xe6ec2
+ 1a4:	a0c30313          	addi	t1,t1,-1524 # e6ec1a0c <EXPECT_XOR>
+ 1a8:	005543b3          	xor	t2,a0,t0
+ 1ac:	0065ce33          	xor	t3,a1,t1
+ 1b0:	01c3e6b3          	or	a3,t2,t3
+ 1b4:	0016b213          	seqz	tp,a3
+
+000001b8 <park>:
+ 1b8:	0000006f          	j	1b8 <park>
+
+Disassembly of section .riscv.attributes:
+
+00000000 <.riscv.attributes>:
+   0:	1941                	.insn	2, 0x1941
+   2:	0000                	.insn	2, 0x0000
+   4:	7200                	.insn	2, 0x7200
+   6:	7369                	.insn	2, 0x7369
+   8:	01007663          	bgeu	zero,a6,14 <_start+0x14>
+   c:	0000000f          	fence	unknown,unknown
+  10:	7205                	.insn	2, 0x7205
+  12:	3376                	.insn	2, 0x3376
+  14:	6932                	.insn	2, 0x6932
+  16:	7032                	.insn	2, 0x7032
+  18:	0031                	.insn	2, 0x0031

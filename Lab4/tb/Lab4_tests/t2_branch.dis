@@ -1,0 +1,84 @@
+
+t2_branch.elf:     file format elf32-littleriscv
+
+
+Disassembly of section .text:
+
+00000000 <_start>:
+   0:	00000193          	li	gp,0
+   4:	00000213          	li	tp,0
+   8:	00100293          	li	t0,1
+   c:	00200313          	li	t1,2
+  10:	fff00393          	li	t2,-1
+  14:	00100193          	li	gp,1
+  18:	00528463          	beq	t0,t0,20 <_start+0x20>
+  1c:	0c80006f          	j	e4 <fail>
+  20:	00200193          	li	gp,2
+  24:	0c628063          	beq	t0,t1,e4 <fail>
+  28:	00300193          	li	gp,3
+  2c:	00629463          	bne	t0,t1,34 <_start+0x34>
+  30:	0b40006f          	j	e4 <fail>
+  34:	00400193          	li	gp,4
+  38:	0a529663          	bne	t0,t0,e4 <fail>
+  3c:	00500193          	li	gp,5
+  40:	0053c463          	blt	t2,t0,48 <_start+0x48>
+  44:	0a00006f          	j	e4 <fail>
+  48:	00600193          	li	gp,6
+  4c:	0872cc63          	blt	t0,t2,e4 <fail>
+  50:	00700193          	li	gp,7
+  54:	0852c863          	blt	t0,t0,e4 <fail>
+  58:	00800193          	li	gp,8
+  5c:	0072d463          	bge	t0,t2,64 <_start+0x64>
+  60:	0840006f          	j	e4 <fail>
+  64:	00900193          	li	gp,9
+  68:	0052d463          	bge	t0,t0,70 <_start+0x70>
+  6c:	0780006f          	j	e4 <fail>
+  70:	00a00193          	li	gp,10
+  74:	0653d863          	bge	t2,t0,e4 <fail>
+  78:	00b00193          	li	gp,11
+  7c:	0072e463          	bltu	t0,t2,84 <_start+0x84>
+  80:	0640006f          	j	e4 <fail>
+  84:	00c00193          	li	gp,12
+  88:	0453ee63          	bltu	t2,t0,e4 <fail>
+  8c:	00d00193          	li	gp,13
+  90:	0053f463          	bgeu	t2,t0,98 <_start+0x98>
+  94:	0500006f          	j	e4 <fail>
+  98:	00e00193          	li	gp,14
+  9c:	0052f463          	bgeu	t0,t0,a4 <_start+0xa4>
+  a0:	0440006f          	j	e4 <fail>
+  a4:	00f00193          	li	gp,15
+  a8:	0272fe63          	bgeu	t0,t2,e4 <fail>
+  ac:	01000193          	li	gp,16
+  b0:	00a00513          	li	a0,10
+  b4:	00000593          	li	a1,0
+  b8:	00158593          	addi	a1,a1,1
+  bc:	fff50513          	addi	a0,a0,-1
+  c0:	fe051ce3          	bnez	a0,b8 <_start+0xb8>
+  c4:	00a00613          	li	a2,10
+  c8:	00c59e63          	bne	a1,a2,e4 <fail>
+  cc:	01100193          	li	gp,17
+  d0:	00100693          	li	a3,1
+  d4:	00d29863          	bne	t0,a3,e4 <fail>
+  d8:	00000193          	li	gp,0
+  dc:	00100213          	li	tp,1
+
+000000e0 <park>:
+  e0:	0000006f          	j	e0 <park>
+
+000000e4 <fail>:
+  e4:	0000006f          	j	e4 <fail>
+
+Disassembly of section .riscv.attributes:
+
+00000000 <.riscv.attributes>:
+   0:	1941                	.insn	2, 0x1941
+   2:	0000                	.insn	2, 0x0000
+   4:	7200                	.insn	2, 0x7200
+   6:	7369                	.insn	2, 0x7369
+   8:	01007663          	bgeu	zero,a6,14 <_start+0x14>
+   c:	0000000f          	fence	unknown,unknown
+  10:	7205                	.insn	2, 0x7205
+  12:	3376                	.insn	2, 0x3376
+  14:	6932                	.insn	2, 0x6932
+  16:	7032                	.insn	2, 0x7032
+  18:	0031                	.insn	2, 0x0031
