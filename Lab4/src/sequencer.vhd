@@ -25,7 +25,8 @@ begin
   Seq_state_next <= RESET when rst = '1' else Seq_state_i;
 
   with Seq_state select Seq_state_i <=
-  start_next when WAITING,
+  START when RESET,
+  start_next when START,
   Waiting_next when others;
 
   Start_next <= START when ready = '0' else WAITING;

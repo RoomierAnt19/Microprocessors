@@ -1,4 +1,11 @@
   [libraries]
   defaultlib.files = [
+  '../Decoder/**/*.vhd',
+  '../branch_test/src/btu.vhd',
+  '../ALU/**/*.vhd',
+  '../reg_file/**/*.vhd',
+  '../Datapath/**/*.vhd',
   '**/*.vhd',
+  '../Package/*.vhd',
+  '../Fetch_Unit/src/*.vhd',
   ]

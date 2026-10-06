@@ -11,6 +11,7 @@ entity data_path is
          rst: in std_logic;
          Dbugsel: in Std_Logic_Vector(4 downto 0);
          Dbug: out Std_Logic_Vector(31 downto 0);
+         instruction_address: in Std_Logic_Vector(31 downto 0);
          PC_out: out Std_Logic_Vector(31 downto 0)
        );
 end data_path;
@@ -79,7 +80,7 @@ begin
 
   with cw.PCAsel select 
     a_bus <= a when '0',
-             pc_q when others;
+             instruction_address when others;
 
   with cw.IMMBsel select 
     b_bus <= b when '0',

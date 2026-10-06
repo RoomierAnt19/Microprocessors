@@ -91,7 +91,7 @@ begin
              rdata => instruction,
              raddr => address,
              ready => ready,
-             M_AXI_ARID => M_AXI_RID,
+             M_AXI_ARID => M_AXI_ARID,
              M_AXI_ARADDR => M_AXI_ARADDR,
              M_AXI_ARLEN => M_AXI_ARLEN,
              M_AXI_ARSIZE => M_AXI_ARSIZE,

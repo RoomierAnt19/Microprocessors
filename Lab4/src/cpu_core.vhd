@@ -79,7 +79,8 @@ architecture structural of cpu_core is
 
   -- The fetch unit's user ports.
   signal PC, instruction, instruction_address : std_logic_vector(31 downto 0);
-  signal ready, fetch : std_logic;
+  signal ready, fetch, PCie, execute : std_logic;
+  signal instruction_cw, data_cw : control_word;
 
   -- FILL IN: the signals your sequencer, decoder and datapath need, for
   -- example the control word from the decoder and the one that reaches the
@@ -90,21 +91,59 @@ begin
   ------------------------------------------------------------------------------
   -- FILL IN: your sequencer.  It drives fetch and PCie, and watches ready.
   ------------------------------------------------------------------------------
-
+sequencer : entity work.sequencer
+  port map (
+    clk => clk,
+    rst => rst,
+    ready => ready,
+    fetch => fetch,
+    PCie => PCie,
+    execute => execute
+  );
   ------------------------------------------------------------------------------
   -- FILL IN: your decoder.  Its input is instruction.
   ------------------------------------------------------------------------------
-
+decoder : entity work.instruction_decoder
+  port map (
+    instruction => instruction,
+    cw => instruction_cw,
+    PCie => PCie
+  );
   ------------------------------------------------------------------------------
   -- FILL IN: whatever lets Dlen, PCle and isBR through in one cycle only.
   ------------------------------------------------------------------------------
-
+  data_cw.Asel <= instruction_cw.Asel;
+  data_cw.Bsel <= instruction_cw.Bsel;
+  data_cw.Dsel <= instruction_cw.Dsel;
+  data_cw.PCAsel <=  instruction_cw.PCAsel;
+  data_cw.IMMBsel <= instruction_cw.IMMBsel;
+  data_cw.PCDsel <= instruction_cw.PCDsel;
+  data_cw.PCie <= instruction_cw.PCie;
+  data_cw.BRcond <= instruction_cw.BRcond;
+  data_cw.ALUFunc <= instruction_cw.ALUFunc;
+  data_cw.IMM <= instruction_cw.IMM;
+  data_cw.Dlen <= instruction_cw.Dlen and execute;
+  data_cw.PCle <= instruction_cw.PCle and execute;
+  data_cw.isBR <= instruction_cw.isBR and execute;
   ------------------------------------------------------------------------------
   -- FILL IN: your datapath.  Its address input is instruction_address, its
   -- PCout drives PC, and DBGsel and DBGreg go straight through to the ports
   -- of the same name.  Until it is here, DBGreg is undriven.
   ------------------------------------------------------------------------------
+datapath : entity work.data_path
+  port map (
+    cw => data_cw,
+    clk => clk,
+    rst => rst,
+    Dbugsel => DBGsel,
+    Dbug => DBGreg,
+    instruction_address => instruction_address,
+    PC_out => PC
+  );
 
+  ------------------------------------------------------------------------------
+  -- FILL IN: your Fetch_unit.  It fetchs the instruction
+  ------------------------------------------------------------------------------
   FETCH_UNIT : entity work.fetch_unit (implementation)
     generic map(
       C_M_AXI_ID_WIDTH   => 1,
@@ -114,12 +153,13 @@ begin
     port map(
       PC                  => PC,
       instruction         => instruction,
-      instruction_address => instruction_address,  -- to the datapath's address input
+      address =>  instruction_address,  -- to the datapath's address input
       ready               => ready,
       fetch               => fetch,
 
-      clk           => clk,
-      rst           => rst,
+      M_AXI_ACLK => clk,
+
+      M_AXI_ARESETN => rst,
 
       M_AXI_AWID    => m_axi_awid_i,
       M_AXI_AWADDR  => m_axi_awaddr_i,
