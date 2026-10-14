@@ -79,13 +79,13 @@ architecture implementation of fetch_unit is
 begin
   u_axi_read_channel : entity work.axi_read_channel
   generic map (
-                C_M_AXI_ID_WIDTH => C_M_AXI_ID_WIDTH ,
-                C_M_AXI_ADDR_WIDTH => C_M_AXI_ADDR_WIDTH,
-                C_M_AXI_DATA_WIDTH => C_M_AXI_DATA_WIDTH
+                ID_WIDTH => C_M_AXI_ID_WIDTH ,
+                ADDR_WIDTH => C_M_AXI_ADDR_WIDTH,
+                DATA_WIDTH => C_M_AXI_DATA_WIDTH
               )
   port map (
              clk => M_AXI_ACLK,
-             rst => M_AXI_ARESETN,
+             rst => not M_AXI_ARESETN,
              start => fetch,
              addr => pc,
              rdata => instruction,
@@ -129,7 +129,5 @@ begin
   M_AXI_WLAST <= '0';
   M_AXI_WVALID <= '0';
   M_AXI_BREADY <= '0';
-
-  M_AXI_ARID <= (others => '0');
 
 end implementation;

@@ -4,7 +4,7 @@ use IEEE.numeric_std.all;
 use work.project_types.all;
 
 
-entity data_path is 
+entity data_path is
   Port (
          cw: in control_word;
          clk: in std_logic;
@@ -74,22 +74,21 @@ begin
              load => branch
            );
 
-  with cw.PCDsel select 
+  with cw.PCDsel select
     d_bus <= pc_q when '1',
              alu_d when others;
 
-  with cw.PCAsel select 
+  with cw.PCAsel select
     a_bus <= a when '0',
              instruction_address when others;
 
-  with cw.IMMBsel select 
+  with cw.IMMBsel select
     b_bus <= b when '0',
              cw.IMM when others;
 
   branch <= take_branch or cw.PCle;
 
   PC_out <= pc_q;
-
 
 end architecture arch;
 

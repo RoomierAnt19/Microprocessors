@@ -159,7 +159,7 @@ datapath : entity work.data_path
 
       M_AXI_ACLK => clk,
 
-      M_AXI_ARESETN => rst,
+      M_AXI_ARESETN => not rst,
 
       M_AXI_AWID    => m_axi_awid_i,
       M_AXI_AWADDR  => m_axi_awaddr_i,

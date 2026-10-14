@@ -38,21 +38,25 @@
 --      A manager may not withdraw a read request.
 --   2. ARADDR, ARLEN, ARSIZE and ARBURST hold still for as long as
 --      ARVALID is high and ARREADY has not been seen.
---   3. ARLEN is 0, ARSIZE is 010 and ARBURST is 01 whenever ARVALID is
---      high: one beat, four bytes, INCR.
+--   3. ARLEN is 0, ARSIZE is 010, ARBURST is 01 and ARCACHE is 0010
+--      whenever ARVALID is high: one beat, four bytes, INCR, normal
+--      non-cacheable modifiable.
 --   4. No read data beat arrives that was not asked for, and no
 --      address is put on the bus that the client did not request.
 --   5. ARVALID is low while rst is high and on the cycle after it falls.
 --   6. rdata and raddr hold still while ready is high and no new read
 --      has been started.
+--   7. Once the first read has finished, rdata holds mem_word of raddr.
+--      The two change together, so they never disagree, even while a
+--      read is in progress.
 --
 -- And for every read:
 --
---   7. The address the engine puts on ARADDR is the address the client
+--   8. The address the engine puts on ARADDR is the address the client
 --      put on addr when start was taken.
---   8. ready falls on the cycle after a start is taken, so the client
+--   9. ready falls on the cycle after a start is taken, so the client
 --      can tell that the engine is busy.
---   9. When ready comes back up, rdata holds mem_word of the requested
+--  10. When ready comes back up, rdata holds mem_word of the requested
 --      address and raddr holds the requested address.
 --
 -- The subordinate stalls at random.  It holds ARREADY low for 0 to 3
@@ -184,11 +188,11 @@ begin
   ------------------------------------------------------------------------------
   -- Unit under test
   ------------------------------------------------------------------------------
-  uut : entity work.axi_read_channel(rtl)
+  uut : entity work.axi_read_channel(behavioral)
     generic map (
-      C_M_AXI_ADDR_WIDTH => ADDR_WIDTH,
-      C_M_AXI_DATA_WIDTH => DATA_WIDTH,
-      C_M_AXI_ID_WIDTH   => ID_WIDTH
+      ADDR_WIDTH => ADDR_WIDTH,
+      DATA_WIDTH => DATA_WIDTH,
+      ID_WIDTH   => ID_WIDTH
       )
     port map (
       clk => clk,
@@ -343,6 +347,10 @@ begin
     variable hold_addr  : std_logic_vector(ADDR_WIDTH-1 downto 0)
       := (others => '0');
 
+    -- Set once the first read has finished.  From then on rdata must
+    -- always be the word that was read from raddr.
+    variable have_result : boolean := false;
+
     variable cycles   : natural;
     variable gap      : natural;
     variable hangover : natural;
@@ -394,6 +402,8 @@ begin
               "ARSIZE is not 010, so the beat is not four bytes wide");
         check(arburst = "01",
               "ARBURST is not 01 (INCR)");
+        check(arcache = "0010",
+              "ARCACHE is " & to_string(arcache) & ", must be 0010");
       end if;
 
       -- An address handshake.  It must be the address the client asked
@@ -423,6 +433,14 @@ begin
         check(raddr = hold_addr,
               "raddr changed while the engine was idle: was " &
               hex(hold_addr) & ", now " & hex(raddr));
+      end if;
+
+      -- rdata and raddr must always describe the same read.
+      if have_result then
+        check(rdata = mem_word(raddr),
+              "rdata and raddr disagree: raddr is " & hex(raddr) &
+              ", rdata is " & hex(rdata) & ", expected " &
+              hex(mem_word(raddr)));
       end if;
 
       p_arvalid := arvalid;
@@ -536,7 +554,8 @@ begin
       -- Hold these, and check that they do not move until the next read.
       hold_data  := rdata;
       hold_addr  := raddr;
-      hold_valid := true;
+      hold_valid  := true;
+      have_result := true;
 
     end loop;
 
@@ -607,7 +626,8 @@ begin
             "directed read of " & hex(a) & ": raddr is " & hex(raddr));
       hold_data  := rdata;
       hold_addr  := raddr;
-      hold_valid := true;
+      hold_valid  := true;
+      have_result := true;
 
     end loop;
 
