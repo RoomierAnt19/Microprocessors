@@ -98,9 +98,7 @@ architecture behavioral of axi_write_channel is
   signal WRC_state,WRC_state_next,WRC_state_next_i: WRC_state_t;
   signal WRC_WAITING_next: WRC_state_t;
 
-  signal aw_latch_enable, w_latch_enable : std_logic;
-  signal addr_i : Std_Logic_Vector(31 downto 0);
-
+  signal aw_latch_enable, w_latch_enable, all_ready: std_logic;
   -- Declare the state machines here.  Three of them, one per channel, is
   -- the arrangement that follows from Lab 3: the address and the data go
   -- out on channels that handshake independently and in either order, so
@@ -126,11 +124,10 @@ begin
 
   WAC_INIT_next <= ACCEPT when M_AXI_AWREADY = '1' else INIT;
   WAC_ACCEPT_next <= WAITING when m_axi_bvalid = '1' else ACCEPT;
-  WAC_WAITING_next <= INIT when start = '1' and WC_state = WAITING
+  WAC_WAITING_next <= INIT when start = '1' and all_ready = '1'
                       else WAITING;
   -- Mealy outputs for WAC state machine 
-  aw_latch_enable <= '1' when WAC_state = WAITING and start = '1'
-                     else '0';
+  aw_latch_enable <= '1' when WAC_state = WAITING and WAC_WAITING_next = INIT else '0';
   -- Moore outputs for WAC state machine
   M_AXI_AWVALID <= '1' when WAC_state = INIT else '0';
   ------------------------------------------------------------------------------
@@ -147,11 +144,12 @@ begin
 
   WC_INIT_next <= ACCEPT when M_AXI_WREADY = '1' else INIT;
   WC_ACCEPT_next <= WAITING when m_axi_bvalid = '1' else ACCEPT;
-  WC_WAITING_next <= INIT when start = '1' and WC_state = WAITING
+  WC_WAITING_next <= INIT when start = '1' and all_ready = '1'
                       else WAITING;
   -- Mealy outputs for WAC state machine 
+  w_latch_enable <= '1' when WC_state = WAITING and WC_WAITING_next = INIT else '0';
   -- Moore outputs for WAC state machine
-  M_AXI_WVALID <= '1' when WAC_state = INIT else '0';
+  M_AXI_WVALID <= '1' when WC_state = INIT else '0';
   ------------------------------------------------------------------------------
   -- Write Response Channel state machine
   ------------------------------------------------------------------------------
@@ -165,7 +163,7 @@ begin
   WRC_WAITING_next <= ACCEPT when M_AXI_BVALID = '1' else
                      WAITING;
   -- Mealy outputs for RC state machine
-  w_latch_enable <= '1' when WRC_state_next_i = ACCEPT else '0';
+  --w_latch_enable <= '1' when WRC_state_next_i = ACCEPT else '0';
   -- Moore outputs for RC state machine
   M_AXI_BREADY <= '1' when WRC_state = WAITING else '0';
   ------------------------------------------------------------------------------
@@ -176,34 +174,68 @@ begin
   -- the three do not reach the idle state on the same edge, and a start
   -- taken in the gap puts a write on the bus that nobody asked for.
   ------------------------------------------------------------------------------
-
-
+  all_ready <= '1' when WRC_state = WAITING and WAC_state = WAITING and WC_state = WAITING else '0';
+  ready <= all_ready;
   ------------------------------------------------------------------------------
   -- Address, data and strobe registers
   --
   -- Loaded on the edge that starts the transaction, and on that edge
   -- only, so each payload is stable for as long as its VALID is asserted.
   ------------------------------------------------------------------------------
+address : entity work.gen_reg
+  generic map (
+    N => ADDR_WIDTH
+  )
+  port map (
+    clk => clk,
+    d => addr,
+    q => m_axi_awaddr,
+    reset => rst,
+    enable => aw_latch_enable
+  );
 
+data : entity work.gen_reg
+  generic map (
+    N => DATA_WIDTH
+  )
+  port map (
+    clk => clk,
+    d => wdata,
+    q => m_axi_wdata,
+    reset => rst,
+    enable => w_latch_enable
+  );
 
+strobe : entity work.gen_reg
+  generic map (
+    N => DATA_WIDTH/8
+  )
+  port map (
+    clk => clk,
+    d => wstrb,
+    q => m_axi_wstrb,
+    reset => rst,
+    enable => w_latch_enable
+  );
   ------------------------------------------------------------------------------
   -- AXI Write Address Channel outputs
   ------------------------------------------------------------------------------
-
-
+  m_axi_awid <= (others => '0');
+  m_axi_awlen <= (others => '0');
+  m_axi_awsize <= "010";
+  m_axi_awburst <= "01";
+  m_axi_awlock <= '0';
+  m_axi_awcache <= "0010";
+  m_axi_awprot <= "000";
+  m_axi_awqos <= "0000";
   ------------------------------------------------------------------------------
   -- AXI Write Data Channel outputs
   ------------------------------------------------------------------------------
-
-
+  m_axi_wlast <= '1' when WC_state = INIT else '0';
   ------------------------------------------------------------------------------
   -- AXI Write Response Channel outputs
   ------------------------------------------------------------------------------
-
-
   ------------------------------------------------------------------------------
   -- Client interface outputs
   ------------------------------------------------------------------------------
-
-
 end behavioral;
