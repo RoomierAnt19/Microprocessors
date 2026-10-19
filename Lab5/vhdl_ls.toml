@@ -1,0 +1,10 @@
+  [libraries]
+  defaultlib.files = [
+  '../load_store/**/*.vhd',
+  '../Fetch_Unit/**/*.vhd',
+  '../branch_test/src/btu.vhd',
+  '../ALU/**/*.vhd',
+  '../reg_file/**/*.vhd',
+  '**/*.vhd',
+  '../Package/*.vhd',
+  ]

@@ -1,7 +1,8 @@
 /* CENG 442 Lab 5 test programs.
  *
  * The memory map is the one Lab 6 puts on the FPGA: 8 KB of ROM at zero
- * holding the program, and 8 KB of RAM at C0000000.  The test programs
+ * holding the program, and 8 KB of RAM at 10000000.  C0000000 is
+ * reserved for the DDR memory.  The test programs
  * build every value they need with instructions, so there is no
  * initialised data to copy from ROM to RAM and no startup code.  Read
  * only test data lives in .rodata, in ROM, where a load can reach it
@@ -14,7 +15,7 @@ ENTRY(_start)
 MEMORY
 {
   ROM (rx)  : ORIGIN = 0x00000000, LENGTH = 8K
-  RAM (rwx) : ORIGIN = 0xC0000000, LENGTH = 8K
+  RAM (rwx) : ORIGIN = 0x10000000, LENGTH = 8K
 }
 
 SECTIONS

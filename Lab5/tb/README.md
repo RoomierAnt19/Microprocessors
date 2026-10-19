@@ -15,7 +15,7 @@ them first.
 | `t5_store.S` | Adds stores: SW, SH, SB, read back, and the neighbours checked. |
 | `axi_memory.vhdl` | An AXI4 subordinate: memory, optionally loaded from a file. |
 | `cpu_testbench_template.vhdl` | Your `cpu_core`, two memories, and a watcher. One note to read. |
-| `link.ld` | ROM at 00000000, RAM at C0000000, the Lab 6 memory map. |
+| `link.ld` | ROM at 00000000, RAM at 10000000, the memory map used on the board. |
 | `Makefile` | Builds each program to `.dis`, `.hex` and `.coe`. |
 
 ## Building
@@ -28,7 +28,7 @@ Each program produces three files you care about. The `.dis` is the
 disassembly: keep it open, because when the core does nothing it is how
 you find out what the first few instructions actually were. The `.hex` is
 what `axi_memory` reads in simulation. The `.coe` is the same words in the
-format Vivado wants for a block memory, which is what Lab 6 needs.
+format Vivado wants for a block memory, which is what Part B needs.
 
 The toolchain prefix defaults to `riscv32-unknown-elf-`, which is on the
 PATH on the lab machines. Override it for the copy that ships with Vitis:
@@ -82,7 +82,7 @@ one of them means the new wiring broke something that used to work. Then
 **Run each program twice.** `MAX_STALL` on the memories starts at 0, which
 answers as fast as the bus allows. Once a program passes, set it to 3 and
 run again. A core with a handshake bug often passes against instant memory
-and fails against slow memory, and the DDR on the board in Lab 6 is very
+and fails against slow memory, and the DDR on the board in Part B is very
 slow indeed.
 
 **Let the model complain.** It reports an address outside its window, a

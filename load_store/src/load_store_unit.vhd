@@ -144,8 +144,8 @@ architecture behavioral of load_store_unit is
   signal extend_byte : Std_Logic_Vector(31 downto 8);
   signal extend_half : Std_Logic_Vector(31 downto 16);
   signal wstrb_byte, wstrb, wstrb_half  : std_logic_vector(3 downto 0);
-  signal funct : std_logic_vector(2 downto 0);
-  signal lower_add : std_logic_vector(1 downto 0);
+  signal funct, funct_latched : std_logic_vector(2 downto 0);
+  signal lower_add, lower_add_latched : std_logic_vector(1 downto 0);
 
 begin
   ------------------------------------------------------------------------------
@@ -153,8 +153,7 @@ begin
   ------------------------------------------------------------------------------
   ready <= write_ready and read_ready;
   address_fix <= addr(C_M_AXI_ADDR_WIDTH-1 downto 2) & "00";
-
-
+  lower_add <= addr(1 downto 0);
 ------------------------------------------------------------------------------
 -- Read engine: the AR and R channels
 ------------------------------------------------------------------------------
@@ -208,6 +207,7 @@ begin
              wdata => write_data,
              wstrb => wstrb,
              ready => write_ready,
+
              m_axi_awid => M_AXI_AWID,
              m_axi_awaddr => M_AXI_AWADDR,
              m_axi_awlen => M_AXI_AWLEN,
@@ -235,7 +235,7 @@ begin
   ------------------------------------------------------------------------------
   wdata_byte <= wdata(7 downto 0) & wdata(7 downto 0) & wdata(7 downto 0) & wdata(7 downto 0);
   wdata_half <= wdata(15 downto 0) & wdata(15 downto 0);
-  with funct(1 downto 0) select
+  with funct3(1 downto 0) select
     write_data <= wdata_byte when "00",
                   wdata_half when "01",
                   wdata when others;
@@ -244,11 +244,10 @@ begin
   ------------------------------------------------------------------------------
   wstrb_byte <= decode(lower_add, '1');
   wstrb_half <= "1100" when lower_add(1) = '1' else "0011";
-  with funct(1 downto 0) select
+  with funct3(1 downto 0) select
     wstrb <= wstrb_byte when "00",
                   wstrb_half when "01",
                   "1111" when others;
-
   ------------------------------------------------------------------------------
   -- The request, held until the word comes back
   ------------------------------------------------------------------------------
@@ -270,16 +269,15 @@ begin
   )
   port map (
              clk => clk,
-             d => addr(1 downto 0),
-             q => lower_add,
+             d => lower_add,
+             q => lower_add_latched,
              reset => rst,
-             enable => start
+             enable => start and ready
              );
-
   ------------------------------------------------------------------------------
   -- Load data: select the lane, then extend it
   ------------------------------------------------------------------------------
-  with lower_add select
+  with lower_add_latched select
   shifted_read_data <=
     read_data(31 downto 0)              when "00",
     x"00"     & read_data(31 downto 8)  when "01",

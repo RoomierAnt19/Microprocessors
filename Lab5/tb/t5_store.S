@@ -22,7 +22,7 @@ _start:
 	addi	gp, zero, 0
 	addi	tp, zero, 0
 
-	li	s0, 0xc0000000		# s0 = the base of RAM
+	li	s0, 0x10000000		# s0 = the base of RAM
 
 	#--- sw --------------------------------------------------------------
 	addi	gp, zero, 1		# 1: sw then lw
@@ -110,7 +110,7 @@ _start:
 
 	#--- a store writes no register --------------------------------------
 	addi	gp, zero, 12		# 12: s0 still points at the base of RAM
-	li	t2, 0xc0000000
+	li	t2, 0x10000000
 	bne	s0, t2, fail
 
 	#--- somewhere further up RAM ----------------------------------------

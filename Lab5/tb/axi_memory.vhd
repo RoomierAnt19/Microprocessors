@@ -14,7 +14,7 @@
 -- and the same one Lab 6 puts on the FPGA:
 --
 --   ROM  8 KB at 00000000   the program, from the .hex the Makefile builds
---   RAM  8 KB at C0000000   scratch, starting at zero
+--   RAM  8 KB at 10000000   scratch, starting at zero
 --
 -- This is a simulation model.  It is not synthesisable and it is not meant
 -- to be: it uses processes, file reading and a large array, none of which

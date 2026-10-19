@@ -5,7 +5,7 @@ use work.project_types.all;
 
 entity instruction_decoder is
   port (
-         instruction: in std_logic_vector(31 downto 0);   
+         instruction: in std_logic_vector(31 downto 0);
          cw: out control_word;
          PCie: in std_logic
        );

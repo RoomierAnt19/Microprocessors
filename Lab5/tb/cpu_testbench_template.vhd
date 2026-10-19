@@ -9,7 +9,7 @@
 -- A harness for running the test programs against your core.  It
 -- instantiates cpu_core, whose entity has not changed since Lab 4, with the
 -- instruction port, m_axi_*_i, on a ROM at 00000000 holding the program and
--- the data port, m_axi_*_d, on a RAM at C0000000.  A watcher reads the
+-- the data port, m_axi_*_d, on a RAM at 10000000.  A watcher reads the
 -- result out of the register file and prints one line saying whether the
 -- program passed.  The signal names follow the convention that the
 -- instruction side is i_ and the data side is d_.
@@ -238,12 +238,12 @@ begin
       s_axi_rvalid  => i_rvalid,  s_axi_rready  => i_rready);
 
   ------------------------------------------------------------------------------
-  -- RAM at C0000000.  Uninitialised, which is why the test programs write
+  -- RAM at 10000000.  Uninitialised, which is why the test programs write
   -- before they read.
   ------------------------------------------------------------------------------
   RAM : entity work.axi_memory(sim)
     generic map (MEM_SIZE_BYTES => 8192,
-                 BASE_ADDR      => x"C0000000",
+                 BASE_ADDR      => x"10000000",
                  INIT_FILE      => "",
                  READ_ONLY      => false,
                  MAX_STALL      => MAX_STALL,
