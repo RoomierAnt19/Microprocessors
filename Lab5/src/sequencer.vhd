@@ -49,7 +49,7 @@ begin
              '1' when Seq_state = MEMORY and mem_done = '1' else
              '0';
 
-  mem_start <= '1' when Seq_state = WAITING and mem_op = '1'
+  mem_start <= '1' when Seq_state = WAITING and mem_op = '1' and ready = '1'
                      else '0';
   -- Moore outputs for RAC state machine
   fetch <= '1' when Seq_state = START else '0';

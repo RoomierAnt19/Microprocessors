@@ -100,7 +100,7 @@ sequencer : entity work.sequencer
     PCie => PCie,
     execute => execute,
     mem_op => mem_op,
-    mem_done => m_axi_rlast_d,
+    mem_done => m_axi_rlast_d or m_axi_bvalid_d,
     mem_start => mem_start
   );
   ------------------------------------------------------------------------------
@@ -145,7 +145,7 @@ datapath : entity work.data_path
     Dbug => DBGreg,
     wdata => wdata,
     address => addr,
-    rdata => rdata,
+    rdata => m_axi_rdata_d,
     instruction_address => instruction_address,
     PC_out => PC
   );
