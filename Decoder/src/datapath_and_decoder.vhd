@@ -36,6 +36,7 @@ begin
              rst => rst,
              Dbugsel => DBGsel,
              Dbug => DBGreg,
-             PC_out => PCout
+             PC_out => PCout,
+             instruction_address => instruction
              );
 end architecture rtl;

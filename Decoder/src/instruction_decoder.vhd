@@ -61,7 +61,7 @@ begin
                '0' when others;
 
   with instruction(14 downto 12) select
-    is_shift_imm <= TRUE when "001" or "101",
+    is_shift_imm <= TRUE when ("001" or "101"),
                     FALSE when others;
 
   with instruction_type select

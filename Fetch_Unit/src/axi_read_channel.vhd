@@ -91,8 +91,7 @@ begin
                      WAITING;
   -- Mealy outputs for RC state machine
   r_latch_enable <= '1' when RC_state_next_i = ACCEPT else '0';
-  -- Moore outputs for RC state machine
-  read_done <= '1' when RC_state = ACCEPT else '0';
+  read_done <= r_latch_enable;  -- Moore outputs for RC state machine
   M_AXI_RREADY <= '1' when RC_state = WAITING else '0';
   ----------------------------------------------------------------------------------------
   --Moore output for RAC AND RC state machines

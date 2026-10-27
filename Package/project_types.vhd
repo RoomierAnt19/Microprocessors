@@ -137,7 +137,7 @@ package body project_types is
     end if; 
 
     -- immediate for store instructions
-    store_imm := "00000000000000000000" &
+    store_imm := (19 downto 0 => instruction(31)) &
                  instruction(31 downto 25) &
                  instruction(11 downto 7);
                  
