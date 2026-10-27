@@ -137,7 +137,7 @@ architecture behavioral of load_store_unit is
   -- data and its strobes, the register that holds the request, and the
   -- lane selection and extension signals.
   signal read_ready, write_ready : std_logic;
-  signal address_fix, read_data, shifted_read_data: Std_Logic_Vector(31 downto 0);
+  signal address_fix, read_data, shifted_read_data, rdata_latched: Std_Logic_Vector(31 downto 0);
   --write data
   signal wdata_byte, wdata_half, write_data: Std_Logic_Vector(31 downto 0);
 
@@ -168,7 +168,7 @@ begin
              rst => rst,
              start => start and not store,
              addr => address_fix,
-             rdata => read_data,
+             rdata => rdata_latched,
              raddr => open,
              ready => read_ready,
              M_AXI_ARID => M_AXI_ARID,
@@ -277,6 +277,7 @@ begin
   ------------------------------------------------------------------------------
   -- Load data: select the lane, then extend it
   ------------------------------------------------------------------------------
+  read_data <= M_AXI_RDATA when M_AXI_RVALID = '1' else rdata_latched;
   with lower_add_latched select
   shifted_read_data <=
     x"00"     & read_data(31 downto 8)  when "01",
