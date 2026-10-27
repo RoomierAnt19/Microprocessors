@@ -62,7 +62,7 @@ entity cpu_testbench_template is
     CYLON     : boolean := false;
     -- 0 makes the memory answer as fast as the bus allows.  Raise it once
     -- the program passes.
-    MAX_STALL : integer := 0;
+    MAX_STALL : integer := 3;
     -- Give up after this many clock cycles.
     TIMEOUT   : integer := 200000
     );

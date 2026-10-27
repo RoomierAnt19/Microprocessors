@@ -144,7 +144,7 @@ architecture behavioral of load_store_unit is
   signal extend_byte : Std_Logic_Vector(31 downto 8);
   signal extend_half : Std_Logic_Vector(31 downto 16);
   signal wstrb_byte, wstrb, wstrb_half  : std_logic_vector(3 downto 0);
-  signal funct, funct_latched : std_logic_vector(2 downto 0);
+  signal funct : std_logic_vector(2 downto 0);
   signal lower_add, lower_add_latched : std_logic_vector(1 downto 0);
 
 begin
@@ -279,7 +279,6 @@ begin
   ------------------------------------------------------------------------------
   with lower_add_latched select
   shifted_read_data <=
-    read_data(31 downto 0)              when "00",
     x"00"     & read_data(31 downto 8)  when "01",
     x"0000"   & read_data(31 downto 16) when "10",
     x"000000" & read_data(31 downto 24) when "11",

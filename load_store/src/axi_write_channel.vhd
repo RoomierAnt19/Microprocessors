@@ -156,9 +156,8 @@ begin
   WRC_state <= WRC_state_next when rising_edge(clk);
   WRC_state_next <= RESET when rst = '1' else WRC_state_next_i;
 
-  with WRC_state select WRC_state_next_i <= 
-  WRC_WAITING_next when WAITING,
-  WAITING when others;
+  with WRC_state select WRC_state_next_i <= WRC_WAITING_next when WAITING,
+                                            WAITING when others;
 
   WRC_WAITING_next <= ACCEPT when M_AXI_BVALID = '1' else
                      WAITING;
@@ -232,10 +231,4 @@ strobe : entity work.gen_reg
   -- AXI Write Data Channel outputs
   ------------------------------------------------------------------------------
   m_axi_wlast <= '1' when WC_state = INIT else '0';
-  ------------------------------------------------------------------------------
-  -- AXI Write Response Channel outputs
-  ------------------------------------------------------------------------------
-  ------------------------------------------------------------------------------
-  -- Client interface outputs
-  ------------------------------------------------------------------------------
 end behavioral;
