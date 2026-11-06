@@ -135,20 +135,20 @@ decoder : entity work.instruction_decoder
   -- PCout drives PC, and DBGsel and DBGreg go straight through to the ports
   -- of the same name.  Until it is here, DBGreg is undriven.
   ------------------------------------------------------------------------------
-datapath : entity work.data_path
-  port map (
-    cw => data_cw,
-    clk => clk,
-    rst => rst,
-    load => not store and mem_op,
-    Dbugsel => DBGsel,
-    Dbug => DBGreg,
-    wdata => wdata,
-    address => addr,
-    rdata => rdata,
-    instruction_address => instruction_address,
-    PC_out => PC
-  );
+  datapath : entity work.data_path
+    port map (
+      cw => data_cw,
+      clk => clk,
+      rst => rst,
+      load => not store and mem_op,
+      Dbugsel => DBGsel,
+      Dbug => DBGreg,
+      wdata => wdata,
+      address => addr,
+      rdata => rdata,
+      instruction_address => instruction_address,
+      PC_out => PC
+    );
 
   ------------------------------------------------------------------------------
   -- FILL IN: your Fetch_unit.  It fetchs the instruction

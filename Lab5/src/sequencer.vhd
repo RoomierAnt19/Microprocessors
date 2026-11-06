@@ -24,6 +24,7 @@ architecture rtl of sequencer is
 begin
   ------------------------------------------------------------------------- 
   --Storage for Sequencer
+  ------------------------------------------------------------------------- 
   Seq_state <= Seq_state_next when rising_edge(clk);
   Seq_state_next <= RESET when rst = '1' else Seq_state_i;
 

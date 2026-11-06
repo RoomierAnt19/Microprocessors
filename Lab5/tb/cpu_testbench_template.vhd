@@ -56,7 +56,7 @@ entity cpu_testbench_template is
     PROGRAM   : string  := "t4_load.hex";
     -- 0 makes the memories answer as fast as the bus allows.  Raise it
     -- once the program passes.
-    MAX_STALL : integer := 0;
+    MAX_STALL : integer := 3;
     -- Give up after this many clock cycles.
     TIMEOUT   : integer := 200000
     );
@@ -265,10 +265,10 @@ begin
       s_axi_arready => d_arready,
       s_axi_rid     => d_rid,     s_axi_rdata   => d_rdata,
       s_axi_rresp   => d_rresp,   s_axi_rlast   => d_rlast,
+      -- FILL IN, if your data memory is not reachable from the instruction
       s_axi_rvalid  => d_rvalid,  s_axi_rready  => d_rready);
 
   ------------------------------------------------------------------------------
-  -- FILL IN, if your data memory is not reachable from the instruction
   -- side.  The test programs load from .rodata, which the linker puts in ROM,
   -- so t4_load reads from the ROM through the load/store unit.  On the FPGA
   -- in Lab 6 the SmartConnect gives both managers a path to both
