@@ -43,7 +43,7 @@ entity CSR_regs is
     dlen   : in std_logic;                     -- write the register when 1
     din    : in std_logic_vector(31 downto 0); -- data to be written
     qsel   : in std_logic_vector(11 downto 0); -- select the output register
-    qout   : out std_logic_vector(31 downto 0);-- data from selected register
+    qout   : out std_logic_vector(31 downto 0); -- data from selected register
     -- trap entry: mepc <= pc, mcause <= mcause_in
     mcause_in : in std_logic_vector(31 downto 0);
     mcause_le : in std_logic;
@@ -58,7 +58,7 @@ entity CSR_regs is
     -- to the sequencer
     irq       : out std_logic;                    -- take an interrupt
     irq_cause : out std_logic_vector(4 downto 0); -- which one
-    trap_base : out std_logic_vector(31 downto 0);-- mtvec base, for exceptions
+    trap_base : out std_logic_vector(31 downto 0); -- mtvec base, for exceptions
     trap_vector : out std_logic_vector(31 downto 0); -- base + 4*irq_cause
     mepc_out  : out std_logic_vector(31 downto 0)
     );
@@ -200,9 +200,9 @@ begin
 
   -- mcycle/mcycleh (B00/B80), 64 bits, counting every clock.  A write to
   -- either half replaces that half and skips the increment that cycle.
-  mcycle_reg: entity work.generic_register (behavioral)
-    generic map(XLEN => 64)
-    port map(d => mcycle_d, q => mcycle_q, clk => clk, en => '1', rst => reset);
+  mcycle_reg: entity work.gen_reg (behavioral)
+    generic map(N => 64)
+    port map(d => mcycle_d, q => mcycle_q, clk => clk, enable => '1', reset => reset);
   mcycle_inc <= std_logic_vector(unsigned(mcycle_q) + 1);
   mcycle_sel <= dsel_decoded(16#B80#) & dsel_decoded(16#B00#);
   with mcycle_sel select mcycle_d <=
@@ -211,9 +211,9 @@ begin
     mcycle_inc when others;
 
   -- minstret/minstreth (B02/B82), counting retired instructions.
-  minstret_reg: entity work.generic_register (behavioral)
-    generic map(XLEN => 64)
-    port map(d => minstret_d, q => minstret_q, clk => clk, en => '1', rst => reset);
+  minstret_reg: entity work.gen_reg (behavioral)
+    generic map(N => 64)
+    port map(d => minstret_d, q => minstret_q, clk => clk, enable => '1', reset => reset);
   minstret_inc <= std_logic_vector(unsigned(minstret_q) + 1);
   minstret_sel <= dsel_decoded(16#B82#) & dsel_decoded(16#B02#) & exec;
   with minstret_sel select minstret_d <=

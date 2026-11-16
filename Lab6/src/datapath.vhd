@@ -10,23 +10,29 @@ entity data_path is
          clk: in std_logic;
          rst: in std_logic;
          load: in std_logic;
+         CSReg: in std_logic;
          Dbugsel: in Std_Logic_Vector(4 downto 0);
          Dbug: out Std_Logic_Vector(31 downto 0);
          wdata: out Std_Logic_Vector(31 downto 0);
          instruction_address: in Std_Logic_Vector(31 downto 0);
          rdata: in Std_Logic_Vector(31 downto 0);
          PC_out: out Std_Logic_Vector(31 downto 0);
-         address: out Std_Logic_Vector(31 downto 0)
+         address: out Std_Logic_Vector(31 downto 0);
+         CSR_q: in Std_Logic_Vector(31 downto 0);
+         CSR_d: out Std_Logic_Vector(31 downto 0);
+         CSR_en: out std_logic
        );
 end data_path;
 
 architecture arch of data_path is
   signal take_branch, branch : std_logic;
   signal d_bus_sel : Std_Logic_Vector(1 downto 0);
-  signal a,b, d_bus, a_bus, b_bus, alu_d, pc_q: std_logic_vector(31 downto 0);
+  signal a,b, d_bus, a_bus, b_bus, alu_d, pc_q, set, clear, CSR_a: std_logic_vector(31 downto 0);
 
 begin
-
+  ------------------------------------------------------------------------------
+  -- REGISTER FILE
+  ------------------------------------------------------------------------------
   reg_file : entity work.register_file
   generic map (
                 Nsel => 5,
@@ -46,6 +52,9 @@ begin
              dbug => Dbug
            );
 
+  ------------------------------------------------------------------------------
+  -- ALU
+  ------------------------------------------------------------------------------
   alu : entity work.alu
   generic map (
                 XLEN => 32
@@ -57,6 +66,9 @@ begin
              func => cw.ALUFunc
            );
 
+  ------------------------------------------------------------------------------
+  -- BRANCH TEST UNTI
+  ------------------------------------------------------------------------------
   btu : entity work.btu
   generic map (
                 XLEN => 32
@@ -69,6 +81,9 @@ begin
              take_branch => take_branch 
            );
 
+  ------------------------------------------------------------------------------
+  -- PROGRAM COUNTER
+  ------------------------------------------------------------------------------
   pc : entity work.pc
   port map (
              clk => clk,
@@ -79,10 +94,14 @@ begin
              load => branch
            );
 
-  d_bus_sel <= cw.PCDsel & load;
+  ------------------------------------------------------------------------------
+  -- DATA PATH BUS LINES
+  ------------------------------------------------------------------------------
+  d_bus_sel <= cw.PCDsel & load & CSReg;
   with d_bus_sel select
-    d_bus <= pc_q when "10",
-             alu_d when "00",
+    d_bus <= pc_q when "100",
+             alu_d when "000",
+             CSR_q when "001",
              rdata when others;
 
   with cw.PCAsel select
@@ -99,7 +118,21 @@ begin
 
   address <= alu_d;
   wdata <= b;
+  ------------------------------------------------------------------------------
+  -- Set Clear Logic
+  ------------------------------------------------------------------------------
+  with cw.IMMBsel select
+    CSR_a <= a when '0',
+             cw.IMM when others;
 
+  set <= CSR_q or a_bus;
+  clear <= CSR_q and (not a_bus);
+  with cw.ALUFunc(1 downto 0) select
+    CSR_d <= a_bus when "01",
+             set when "10",
+             clear when others;
+
+  CSR_en <= '1' when (unsigned(b_bus) = 0) else '0';
 end architecture arch;
 
 

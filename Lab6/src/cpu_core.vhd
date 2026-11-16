@@ -140,6 +140,7 @@ decoder : entity work.instruction_decoder
       cw => data_cw,
       clk => clk,
       rst => rst,
+      CSReg => CDReg,
       load => not store and mem_op,
       Dbugsel => DBGsel,
       Dbug => DBGreg,
@@ -147,7 +148,10 @@ decoder : entity work.instruction_decoder
       address => addr,
       rdata => rdata,
       instruction_address => instruction_address,
-      PC_out => PC
+      PC_out => PC,
+      CSR_q => CSR_q,
+      CSR_en => CSR_en,
+      CSR_d => CSR_d
     );
 
   ------------------------------------------------------------------------------
