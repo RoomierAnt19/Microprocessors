@@ -1,27 +1,5 @@
 --------------------------------------------------------------------------------
--- CENG 442 Lab 4                                                      cpu_core
---
--- Starting point for the top of your CPU.  The entity below is the published
--- interface.  Do not change it: the block design, the testbenches and the
--- board all depend on these names.
---
---   clk, rst          the clock, and the reset, synchronous and active high.
---                     rst goes straight to every unit, with no inverter.
---   DBGsel, DBGreg    the datapath's debug port, straight through
---   m_axi_*_i         the instruction port.  The fetch unit drives it.
---   m_axi_*_d         the data port.  It is tied off at the end of the
---                     architecture until Lab 5 connects the load/store unit.
---
--- Vivado infers clk, rst, m_axi_i and m_axi_d from the port names alone, so
--- a misspelled name makes an interface disappear from the block design.
---
--- The fetch unit and the tie-offs are done.  What is left is marked FILL IN:
--- your sequencer, your decoder and your datapath, and the wiring between
--- them.  Remember that Dlen, PCle and isBR act on a clock edge and must
--- reach the datapath in only one cycle of Execute.
---
--- Vivado reads the top file of a block design module as VHDL-93.  Keep this
--- file VHDL-93: no expressions in port maps, and no record ports.
+-- CENG 442 Lab 6                                                      cpu_core
 --------------------------------------------------------------------------------
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
@@ -31,6 +9,8 @@ entity cpu_core is
   port (
     clk    : in  std_logic;
     rst    : in  std_logic;   -- synchronous, active high
+    meip : in  std_logic;
+    mtip : in  std_logic;
     DBGsel : in  std_logic_vector(4 downto 0);
     DBGreg : out std_logic_vector(31 downto 0);
 
@@ -77,14 +57,11 @@ end cpu_core;
 
 architecture structural of cpu_core is
 
-  -- The fetch unit's user ports.
-  signal PC, instruction, instruction_address, wdata, rdata, addr : std_logic_vector(31 downto 0);
-  signal ready, fetch, PCie, execute, mem_op, mem_start, store, ready_mem : std_logic;
+  signal mcause_in, mepc_out, trap_vector, trap_base, PC, CSR_address, CSR_instruction, instruction, instruction_address, wdata, rdata, addr, CSR_d, CSR_q : std_logic_vector(31 downto 0);
+  signal CSR_sel: Std_Logic_Vector(31 downto 20);
+  signal mcause, irq_cause: Std_Logic_Vector(4 downto 0);
+  signal restore_mie, mcause_le, take_irq, take_CSR, is_trap, is_mret, irq, ready, fetch, PCie, execute, mem_op, mem_start, store, ready_mem, CSR_en, is_CSR  : std_logic;
   signal instruction_cw, data_cw : control_word;
-
-  -- FILL IN: the signals your sequencer, decoder and datapath need, for
-  -- example the control word from the decoder and the one that reaches the
-  -- datapath.
 
 begin
 
@@ -100,8 +77,10 @@ sequencer : entity work.sequencer
     PCie => PCie,
     execute => execute,
     mem_op => mem_op,
+    irq => irq,
     mem_done => (m_axi_rvalid_d and m_axi_rready_d) or (m_axi_bvalid_d and m_axi_bready_d),
-    mem_start => mem_start
+    mem_start => mem_start,
+    take_irq => take_irq
   );
   ------------------------------------------------------------------------------
   -- FILL IN: your decoder.  Its input is instruction.
@@ -112,7 +91,12 @@ decoder : entity work.instruction_decoder
     cw => instruction_cw,
     PCie => PCie,
     is_store => store,
-    mem_op => mem_op
+    CSR_sel => CSR_sel,
+    mem_op => mem_op,
+    is_CSR => is_CSR,
+    is_mret => is_mret,
+    is_trap => is_trap,
+    mcause => mcause
   );
   ------------------------------------------------------------------------------
   -- FILL IN: whatever lets Dlen, PCle and isBR through in one cycle only.
@@ -140,7 +124,7 @@ decoder : entity work.instruction_decoder
       cw => data_cw,
       clk => clk,
       rst => rst,
-      CSReg => CDReg,
+      is_CSR => is_CSR,
       load => not store and mem_op,
       Dbugsel => DBGsel,
       Dbug => DBGreg,
@@ -151,9 +135,53 @@ decoder : entity work.instruction_decoder
       PC_out => PC,
       CSR_q => CSR_q,
       CSR_en => CSR_en,
-      CSR_d => CSR_d
+      CSR_d => CSR_d,
+      CSR_address => CSR_address,
+      take_CSR => take_CSR
     );
 
+    CSR_address <= trap_base when is_trap = '1' else
+                   trap_vector when take_irq = '1' else
+                   mepc_out;
+
+    take_CSR <= restore_mie or mcause_le;
+
+  ------------------------------------------------------------------------------
+  -- FILL IN: CSR
+  ------------------------------------------------------------------------------
+  CSR_instruction <= pc when take_irq = '1' else instruction_address;
+
+  mcause_in <= ('1' & x"000000" & "000" & irq_cause) when take_irq = '1' else
+             (x"000000" & "000" & mcause);
+
+  mcause_le <= (is_trap and execute) or take_irq;
+
+  restore_mie <= is_mret and execute;
+
+  CSR : entity work.CSR_regs
+    port map (
+      clk => clk,
+      reset => rst,
+      dsel => CSR_sel,
+      dlen => CSR_en and is_CSR and execute,
+      din => CSR_d,
+      qsel => CSR_sel,
+      qout => CSR_q,
+      mcause_in => mcause_in,
+      mcause_le => mcause_le,
+      clear_mie => mcause_le,
+      restore_mie => restore_mie,
+      mie => open,
+      pc => CSR_instruction,
+      exec => execute,
+      mtip => mtip,
+      meip => meip,
+      irq => irq,
+      irq_cause => irq_cause,
+      trap_base => trap_base,
+      trap_vector => trap_vector,
+      mepc_out => mepc_out
+    );
   ------------------------------------------------------------------------------
   -- FILL IN: your Fetch_unit.  It fetchs the instruction
   ------------------------------------------------------------------------------

@@ -87,10 +87,16 @@ package body project_types is
       when "0010111" => return_value := AUIPC;
       when "0110111" => return_value := LUI;
       when "1101111" => return_value := JAL;
-      when "1100111" => return_value := JALR;
-      -- check branch condition to make sure instruction is legal
-      when "1100011" => return_value := BRANCH; 
-      
+      when "1100111" =>
+        case instruction(14 downto 12) is
+          when "000" => return_value := JALR;
+          when others => return_value := illegal;
+        end case;
+      when "1100011" =>
+        case instruction(14 downto 12) is
+          when "000" | "001" | "100" | "101" | "110" | "111" => return_value := BRANCH;
+          when others => return_value := illegal;
+        end case;
       when "0000011" =>
         case instruction(14 downto 12) is
           when "000" | "001" | "010" | "100" | "101" => return_value := LOAD;
@@ -104,7 +110,20 @@ package body project_types is
       when "0010011" => return_value := RI;
       when "0110011" => return_value := RR;
       when "0001111" => return_value := FENCE;
-      when "1110011" => return_value := ECALL;
+      when "1110011" =>
+        case instruction(14 downto 12) is
+          when "100" => return_value := ILLEGAL;
+          when "000" =>
+            case instruction(19 downto 7) is
+              when "0000000000000" =>
+                case instruction(31 downto 20) is
+                  when x"000" | x"001" | x"302" | x"105" => return_value := ECALL;
+                  when others => return_value := ILLEGAL;
+                end case;
+              when others => return_value := ILLEGAL;
+            end case;
+          when others => return_value := ECALL;
+        end case;
       when  others => return_value := ILLEGAL;
     end case;
     return return_value;
@@ -117,7 +136,7 @@ package body project_types is
     i_type : instruction_type_t;
     is_shift_imm: boolean) return std_logic_vector is
     variable
-      ui_imm, jal_imm, b_imm, imm_12, store_imm,
+      ui_imm, jal_imm, b_imm, imm_12, store_imm, csr_imm,
       return_value : std_logic_vector(31 downto 0);
     constant jal_adjust : integer := 4;
   begin
@@ -140,16 +159,13 @@ package body project_types is
     store_imm := (19 downto 0 => instruction(31)) &
                  instruction(31 downto 25) &
                  instruction(11 downto 7);
-                 
-                 --
-      b_imm :=  std_logic_vector(signed(SXT(instruction(31) & instruction(7) & 
-                 instruction (30 downto 25) & instruction(11 downto 8) & "0",32)));
-      -- b_imm   := "0000000000000000000" &
-      --            instruction(31) &
-      --            instruction(7) &
-      --            instruction (30 downto 25) &
-      --            instruction(11 downto 8) &
-      --            "0";
+
+    -- immediate for CSR
+    csr_imm := x"000000" & "000" & instruction(19 downto 15);
+
+    -- immediate for Branch
+    b_imm :=  std_logic_vector(signed(SXT(instruction(31) & instruction(7) &
+                instruction (30 downto 25) & instruction(11 downto 8) & "0",32)));
 
     case i_type is
       when LUI|AUIPC =>
@@ -157,11 +173,13 @@ package body project_types is
       when JAL =>
         return_value := jal_imm;
       when JALR|RI|LOAD =>
-        return_value := imm_12; 
+        return_value := imm_12;
       when BRANCH =>
         return_value := b_imm;
       when STORE =>
         return_value := store_imm;
+      when ECALL =>
+        return_value := csr_imm;
       when others =>
         return_value := (others=>'0');
     end case;

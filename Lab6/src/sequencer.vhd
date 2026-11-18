@@ -8,11 +8,13 @@ entity sequencer is
          clk : in std_logic;
          rst : in std_logic;
          ready : in std_logic;
+         irq : in std_logic;
          mem_op : in std_logic;
          mem_done : in std_logic;
          mem_start : out std_logic;
          fetch : out std_logic;
          PCie : out std_logic;
+         take_irq : out std_logic;
          execute : out std_logic
        );
 end entity sequencer;
@@ -34,7 +36,7 @@ begin
   Waiting_next when WAITING,
   Memory_next when others;
 
-  Start_next <= START when ready = '0' else WAITING;
+  Start_next <= WAITING when (ready = '1' and irq = '0') else START;
 
   Waiting_next <= START when ready = '1' and mem_op = '0' else
                   MEMORY when ready = '1' and mem_op = '1' else
@@ -50,10 +52,13 @@ begin
              '1' when Seq_state = MEMORY and mem_done = '1' else
              '0';
 
+  take_irq <= '1' when Seq_state = START and ready = '0' and irq = '1' else '0';
+
   mem_start <= '1' when Seq_state = WAITING and mem_op = '1' and ready = '1'
                      else '0';
+
   -- Moore outputs for RAC state machine
-  fetch <= '1' when Seq_state = START else '0';
+  fetch <= not irq when Seq_state = START else '0';
 end architecture rtl;
 
 
