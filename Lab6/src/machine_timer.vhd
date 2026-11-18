@@ -86,6 +86,13 @@ entity machine_timer is
     s_axi_rvalid  : out std_logic;
     s_axi_rready  : in  std_logic
     );
+
+  -- Tell the block design that rst is an active-high reset.  Without
+  -- this, Vivado assumes active low and draws rst with a bubble.
+  attribute X_INTERFACE_INFO : string;
+  attribute X_INTERFACE_PARAMETER : string;
+  attribute X_INTERFACE_INFO of rst : signal is "xilinx.com:signal:reset:1.0 rst RST";
+  attribute X_INTERFACE_PARAMETER of rst : signal is "POLARITY ACTIVE_HIGH";
 end machine_timer;
 
 architecture behavioral of machine_timer is
@@ -156,15 +163,15 @@ begin
   s_axi_bvalid  <= in_W_RESP;
   s_axi_bresp   <= "00";
 
-  awaddr_reg: entity work.gen_reg(behavioral)
-    generic map(N => 2)
+  awaddr_reg: entity work.generic_register(behavioral)
+    generic map(XLEN => 2)
     port map(d => s_axi_awaddr(3 downto 2), q => awaddr_q,
-             clk => clk, enable => aw_take, reset => rst);
+             clk => clk, en => aw_take, rst => rst);
 
-  wdata_reg: entity work.gen_reg(behavioral)
-    generic map(N => 32)
+  wdata_reg: entity work.generic_register(behavioral)
+    generic map(XLEN => 32)
     port map(d => s_axi_wdata, q => wdata_q,
-             clk => clk, enable => w_take, reset => rst);
+             clk => clk, en => w_take, rst => rst);
 
   ------------------------------------------------------------------------------
   -- Read side state machine
@@ -190,10 +197,10 @@ begin
 
   -- RDATA is captured on the edge that takes the address, so it holds still
   -- for as long as RVALID is up.
-  rdata_reg: entity work.gen_reg(behavioral)
-    generic map(N => 32)
+  rdata_reg: entity work.generic_register(behavioral)
+    generic map(XLEN => 32)
     port map(d => rdata_d, q => s_axi_rdata,
-             clk => clk, enable => ar_take, reset => rst);
+             clk => clk, en => ar_take, rst => rst);
   araddr_word <= s_axi_araddr(3 downto 2);
   with araddr_word select rdata_d <=
     mtime_lo when "00",
@@ -206,17 +213,17 @@ begin
   ------------------------------------------------------------------------------
   wr_sel <= do_write & awaddr_q;
 
-  mtime_lo_reg: entity work.gen_reg(behavioral)
-    generic map(N => 32)
-    port map(d => mtime_lo_d, q => mtime_lo, clk => clk, enable => '1', reset => rst);
+  mtime_lo_reg: entity work.generic_register(behavioral)
+    generic map(XLEN => 32)
+    port map(d => mtime_lo_d, q => mtime_lo, clk => clk, en => '1', rst => rst);
   mtime_inc <= std_logic_vector(unsigned(mtime_hi & mtime_lo) + 1);
   with wr_sel select mtime_lo_d <=
     wdata_q                 when "100",
     mtime_inc(31 downto 0)  when others;
 
-  mtime_hi_reg: entity work.gen_reg(behavioral)
-    generic map(N => 32)
-    port map(d => mtime_hi_d, q => mtime_hi, clk => clk, enable => '1', reset => rst);
+  mtime_hi_reg: entity work.generic_register(behavioral)
+    generic map(XLEN => 32)
+    port map(d => mtime_hi_d, q => mtime_hi, clk => clk, en => '1', rst => rst);
   with wr_sel select mtime_hi_d <=
     wdata_q                 when "101",
     mtime_inc(63 downto 32) when others;
@@ -226,24 +233,24 @@ begin
   -- zero, so these registers are loaded with ones while rst is high
   -- instead, and their rst inputs are tied low.
   ------------------------------------------------------------------------------
-  cmp_lo_reg: entity work.gen_reg(behavioral)
-    generic map(N => 32)
-    port map(d => cmp_lo_d, q => cmp_lo, clk => clk, enable => cmp_lo_en, reset => '0');
+  cmp_lo_reg: entity work.generic_register(behavioral)
+    generic map(XLEN => 32)
+    port map(d => cmp_lo_d, q => cmp_lo, clk => clk, en => cmp_lo_en, rst => '0');
   cmp_lo_en <= '1' when rst = '1' or wr_sel = "110" else '0';
   cmp_lo_d  <= (others => '1') when rst = '1' else wdata_q;
 
-  cmp_hi_reg: entity work.gen_reg(behavioral)
-    generic map(N => 32)
-    port map(d => cmp_hi_d, q => cmp_hi, clk => clk, enable => cmp_hi_en, reset => '0');
+  cmp_hi_reg: entity work.generic_register(behavioral)
+    generic map(XLEN => 32)
+    port map(d => cmp_hi_d, q => cmp_hi, clk => clk, en => cmp_hi_en, rst => '0');
   cmp_hi_en <= '1' when rst = '1' or wr_sel = "111" else '0';
   cmp_hi_d  <= (others => '1') when rst = '1' else wdata_q;
 
   ------------------------------------------------------------------------------
   -- mtip
   ------------------------------------------------------------------------------
-  mtip_reg: entity work.gen_reg(behavioral)
-    generic map(N => 1)
-    port map(d => mtip_d, q => mtip_q, clk => clk, enable => '1', reset => rst);
+  mtip_reg: entity work.generic_register(behavioral)
+    generic map(XLEN => 1)
+    port map(d => mtip_d, q => mtip_q, clk => clk, en => '1', rst => rst);
   mtip_d(0) <= '1' when unsigned(mtime_hi & mtime_lo) >= unsigned(cmp_hi & cmp_lo)
                else '0';
   mtip <= mtip_q(0);

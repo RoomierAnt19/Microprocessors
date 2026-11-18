@@ -36,7 +36,7 @@ begin
                instruction(19 downto 15) when others;
 
   with instruction(14 downto 12) select
-    is_csr_dlen <= '0' when "000" or "100",
+    is_csr_dlen <= '0' when "000" | "100",
                     '1' when others;
 
   with instruction_type select
